@@ -1,4 +1,5 @@
-class Empty():
+from .piece import Piece
+class Empty(Piece):
     def __init__(self):
         self.type = "0"
 

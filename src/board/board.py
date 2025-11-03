@@ -1,6 +1,9 @@
 from pieces import *
+
 class Board:
     board = []
+    white_pieces = []
+    black_pieces = []
     def __init__(self, rows, cols):
         self.rows = rows
         self.cols = cols
