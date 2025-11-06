@@ -1,4 +1,5 @@
 from pieces import *
+from board.utils import *
 
 class Board:
     board = []
@@ -16,3 +17,9 @@ class Board:
     def printBoard(self):
         for i in range(self.rows):
             print(self.board[i])
+        
+    def getPiece(self, pos):
+        if (validPos(pos)):
+            (i, j) = pos
+            return self.board[i][j]
+        return 0

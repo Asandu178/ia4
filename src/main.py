@@ -7,21 +7,15 @@ from pieces import *
 b = Board(8, 8)
 
 
-fenToBoard(b, startingFen)
-
-par = Pawn('p', 'white', 'ce')
-
-b.board[2][0] = par
+fenToBoard(b, "rnbqkbnr/pppppppp/8/8/8/1p6/PPPPPPPP/RNBQKBNR/")
 
 b.printBoard()
 
+for p in b.board[6]:
+    print(p.moveList())
+    
+
 fen  = boardToFen(b)
-
-p = b.board[1][0]
-
-print(p.moveList())
-
-print(p)
 
 print(fen)
 
