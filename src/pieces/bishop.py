@@ -21,11 +21,9 @@ class Bishop(Piece):
         if self.colour == 'white':
             friendlies = b.white_pieces
             enemies = b.black_pieces
-            direction = -1
         else:
             friendlies = b.black_pieces
             enemies = b.white_pieces
-            direction = 1
         
 
         friendlyPositions = {p.position for p in friendlies}

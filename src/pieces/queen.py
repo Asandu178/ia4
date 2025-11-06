@@ -2,6 +2,9 @@ from .piece import Piece
 from board.utils import *
 
 class Queen(Piece):
+
+    value = 9
+
     def __repr__(self):
         return f"{self.type}"
     
@@ -13,11 +16,9 @@ class Queen(Piece):
         if self.colour == 'white':
             friendlies = b.white_pieces
             enemies = b.black_pieces
-            direction = -1
         else:
             friendlies = b.black_pieces
             enemies = b.white_pieces
-            direction = 1
         
 
         friendlyPositions = {p.position for p in friendlies}
