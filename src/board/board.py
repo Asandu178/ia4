@@ -23,3 +23,13 @@ class Board:
             (i, j) = pos
             return self.board[i][j]
         return 0
+    
+    def getKingPosition(self, colour):
+        if (colour == 'white'):
+            for piece in self.white_pieces:
+                if (piece.type == 'K'):
+                    return piece.position
+        
+        for piece in self.black_pieces:
+            if (piece.type == 'k'):
+                return piece.position

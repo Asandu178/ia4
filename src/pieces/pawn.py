@@ -40,9 +40,9 @@ class Pawn(Piece):
 
         allPiecePositions = {p.position for p in enemies + friendlies}
 
-        if (validPos(forward1) and forward1 not in allPiecePositions):
+        if validPos(forward1) and forward1 not in allPiecePositions:
                 moves.append(forward1)
-                if (validPos(forward2) and self.firstMove and forward2 not in allPiecePositions):
+                if validPos(forward2) and self.firstMove and forward2 not in allPiecePositions:
                     moves.append(forward2)
 
 
@@ -51,9 +51,9 @@ class Pawn(Piece):
         attacks = [(i + direction, j + 1), (i + direction, j - 1)]
 
         for attack in attacks:
-            if (validPos(attack)):
+            if validPos(attack):
                 for enemy in enemies:
-                    if (enemy.position == attack):
+                    if enemy.position == attack:
                         moves.append(attack)
             else:
                 continue

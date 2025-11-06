@@ -27,10 +27,28 @@ class Bishop(Piece):
             enemies = b.white_pieces
             direction = 1
         
-        (i, j) = self.position
 
-        allPiecePositions = {p.position for p in enemies + friendlies}
-        # for x in range(8):
-        #     for y in range(8):
+        friendlyPositions = {p.position for p in friendlies}
+        enemyPositions = {p.position for p in enemies}
 
-        pass
+        directions = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
+
+        for dx, dy in directions:
+
+            x, y = self.position
+            x += dx
+            y += dy
+
+            while validPos((x, y)):
+                # ensure we dont try to move over an allied piece
+                if (x, y) in friendlyPositions:
+                    break
+                moves.append((x, y))
+                # when we hit the first enemy we stop looking in this direction, this being the last allowed move
+                if (x, y) in enemyPositions:
+                    break
+
+                x += dx
+                y += dy
+
+        return moves

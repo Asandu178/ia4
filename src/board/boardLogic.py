@@ -38,20 +38,20 @@ def fenToBoard(b : Board, fenNotation : str):
     j = 0
 
     for letter in fenNotation:
-        if (letter.isalpha()):
+        if letter.isalpha():
             cls, colour, img = fenMap[letter]
             table[i][j] = cls(letter, colour, img, (i, j))
             table[i][j].Board = b
-            if (colour == 'white'):
+            if colour == 'white':
                 b.white_pieces.append(table[i][j])
             else:
                 b.black_pieces.append(table[i][j])
             j += 1
 
-        if (letter.isnumeric()):
+        if letter.isnumeric():
             j += int(letter)
 
-        if (letter == '/'):
+        if letter == '/':
             i += 1
             j = 0
 
@@ -66,8 +66,8 @@ def boardToFen(b : Board):
     for line in table:
         offset = 0
         for piece in line:
-            if (piece.type != "0"):
-                if (offset != 0):
+            if piece.type != "0":
+                if offset != 0:
                     fen += str(offset)
                 fen += piece.type
                 offset = 0
@@ -86,7 +86,7 @@ def updateBoard(b : Board):
     
     for line in table:
         for piece in line:
-            if (piece.colour == 'white'):
+            if piece.colour == 'white':
                 white.append(piece)
             else:
                 black.append(piece)
