@@ -2,9 +2,9 @@ from pieces import *
 from board.utils import *
 
 class Board:
-    board = []
-    white_pieces = []
-    black_pieces = []
+    board : list[list[Piece]] = []
+    white_pieces : list[Piece] = []
+    black_pieces : list[Piece] = []
     def __init__(self, rows, cols):
         self.rows = rows
         self.cols = cols
@@ -18,13 +18,26 @@ class Board:
         for i in range(self.rows):
             print(self.board[i])
         
-    def getPiece(self, pos):
+    def getPiece(self, pos : tuple[int, int]) -> Piece:
         if (validPos(pos)):
             (i, j) = pos
             return self.board[i][j]
         return 0
     
-    def getKingPosition(self, colour):
+    def movePiece(self, p : Piece, newPos : tuple[int, int]):
+
+        x, y = p.position
+        newx, newy = newPos
+
+        if isinstance(p, Pawn):
+            p.firstMove = False
+            
+
+        self.board[newx][newy] = p
+        self.board[x][y] = Empty()
+        p.position = newPos
+    
+    def getKingPosition(self, colour : str) -> tuple[int, int]:
         if (colour == 'white'):
             for piece in self.white_pieces:
                 if (piece.type == 'K'):

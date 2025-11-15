@@ -7,7 +7,7 @@ from board import utils
 from pieces.empty import Empty
 
 # pygame setup
-def board(theme_name="gold"):
+def boardDisplay(theme_name="gold"):
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     running = True
