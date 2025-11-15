@@ -13,7 +13,7 @@ class Bishop(Piece):
         return f"{self.type}"
     
 
-    def moveList(self):
+    def moveList(self) -> list[tuple[int, int]]:
 
         b = self.Board
         

@@ -15,7 +15,7 @@ class Pawn(Piece):
     def __repr__(self):
         return f"{self.type}"
     
-    def moveList(self):
+    def moveList(self) -> list[tuple[int, int]]:
 
         b = self.Board
         

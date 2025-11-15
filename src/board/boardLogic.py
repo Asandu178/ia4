@@ -1,5 +1,6 @@
 from .board import Board
-from pieces import Pawn, Knight, Bishop, Rook, Queen, King, Empty
+from pieces import Piece, Pawn, Knight, Bishop, Rook, Queen, King, Empty
+import random
 
 startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
@@ -56,7 +57,7 @@ def fenToBoard(b : Board, fenNotation : str):
             j = 0
 
 
-def boardToFen(b : Board):
+def boardToFen(b : Board) -> str:
 
     table = b.board
     fen = ""
@@ -81,16 +82,73 @@ def boardToFen(b : Board):
 
 def updateBoard(b : Board):
     table = b.board
-    white = []
-    black = []
+    b.white_pieces = []
+    b.black_pieces = []
     
     for line in table:
         for piece in line:
             if piece.colour == 'white':
-                white.append(piece)
+                b.white_pieces.append(piece)
             else:
-                black.append(piece)
-    return (white, black)
+                b.black_pieces.append(piece)
+    return (b.white_pieces, b.black_pieces)
 
+
+def isCheck(b : Board, colour : str) -> bool:
+
+    kingPos = b.getKingPosition(colour)
+
+    if colour == 'white':
+            enemies = b.black_pieces
+    else:
+            enemies = b.white_pieces
+
+    for enemy in enemies:
+        if kingPos in enemy.moveList():
+            return True
+    
+    return False
+
+def getLegalMoves(p : Piece) -> list[tuple[int, int]]:
+
+    b : Board = p.Board
+    
+    legalMoves = []
+
+    oldPos = p.position
+
+    moves = p.moveList()
+
+    for move in moves:
+
+        pieceAtDest = b.board[move[0]][move[1]]
+
+        b.movePiece(p, move)
+
+        if not isCheck(b, p.colour):
+            legalMoves.append(move)
+
+        b.movePiece(p, oldPos)
+        b.board[move[0]][move[1]] = pieceAtDest
+
+    return legalMoves
+
+
+def randomMovePiece(p : Piece):
+    b : Board = p.Board
+    try:
+        newPos = random.choice(getLegalMoves(p))
+        b.movePiece(p, newPos)
+    except IndexError:
+        print("No valid movement")
+    
+        
+
+    
+
+
+
+
+    
 
 
