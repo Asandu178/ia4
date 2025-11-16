@@ -9,6 +9,7 @@ class Pawn(Piece):
     def __init__(self, type, colour, image, position = None):
         super().__init__(type, colour, image, position)
         self.firstMove = True
+        self.enPassant = False
 
         
 
@@ -40,6 +41,8 @@ class Pawn(Piece):
 
         allPiecePositions = {p.position for p in enemies + friendlies}
 
+        friendlyPositions = {p.position for p in friendlies}
+
         if validPos(forward1) and forward1 not in allPiecePositions:
                 moves.append(forward1)
                 if validPos(forward2) and self.firstMove and forward2 not in allPiecePositions:
@@ -57,5 +60,24 @@ class Pawn(Piece):
                         moves.append(attack)
             else:
                 continue
+
+        # treat en passant case
+        # release meeeeeee
+        # TODO implement the logic ffs
+        # maybe use a last move logic like if enemy last movement was a pawn check if he moved 2 tiles and if adjacent to this one -> can capture
+
+        for attack in attacks:
+            if validPos(attack) and attack not in friendlyPositions:
+                left : Piece = b.getPiece((i, j - 1))
+                right : Piece = b.getPiece((i, j + 1))
+
+                if isinstance(left, Pawn):
+                    if left.enPassant:
+                        moves.append(attack)
+                if isinstance(right, Pawn):
+                    if right.enPassant:
+                        moves.append(attack)
+
+
 
         return moves

@@ -8,7 +8,7 @@ from board_gui import *
 b = Board(8, 8)
 
 
-fenToBoard(b, "rnbqkbnr/pppprppp/Q7/8/8/8/PPPP1PPP/RNBQKBNR/")
+fenToBoard(b, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR/")
 
 b.printBoard()    
 
@@ -25,9 +25,11 @@ print(b.getKingPosition('white'))
 for piece in b.white_pieces:
     print(f'Miscari valide pentru piesa {piece.type} aflata la {piece.position} : {getLegalMoves(piece)}')
 
-piesa = b.getPiece((2, 0))
+r = b.getPiece((0, 0))
+R = b.getPiece((7, 0))
 
-print(getLegalMoves(piesa))
+b.movePiece(r, (1, 0))
+b.movePiece(R, (2, 0))
 
 b.printBoard()
 
