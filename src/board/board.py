@@ -22,7 +22,7 @@ class Board:
         if (validPos(pos)):
             (i, j) = pos
             return self.board[i][j]
-        return 0
+        return Empty()
     
     def movePiece(self, p : Piece, newPos : tuple[int, int]):
 
@@ -31,11 +31,12 @@ class Board:
 
         if isinstance(p, Pawn):
             p.firstMove = False
-            
 
         self.board[newx][newy] = p
         self.board[x][y] = Empty()
         p.position = newPos
+
+        self.updateBoard()
     
     def getKingPosition(self, colour : str) -> tuple[int, int]:
         if (colour == 'white'):
@@ -46,3 +47,16 @@ class Board:
         for piece in self.black_pieces:
             if (piece.type == 'k'):
                 return piece.position
+        
+    def updateBoard(self):
+
+        self.white_pieces = []
+        self.black_pieces = []
+
+        for line in self.board:
+            for piece in line:
+                if not piece.type == "0":
+                    if piece.colour == 'white':
+                        self.white_pieces.append(piece)
+                    else:
+                        self.black_pieces.append(piece)
