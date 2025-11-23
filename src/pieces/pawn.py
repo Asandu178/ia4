@@ -6,10 +6,10 @@ class Pawn(Piece):
 
     value = 1
 
-    def __init__(self, type, colour, image, position = None):
-        super().__init__(type, colour, image, position)
+    def __init__(self, colour, image, position = None):
+        super().__init__(colour, image, position)
         self.firstMove = True
-        self.enPassant = False
+        self.type = 'P' if self.colour == 'white' else 'p'
 
         
 
@@ -61,23 +61,40 @@ class Pawn(Piece):
             else:
                 continue
 
-        # treat en passant case
-        # release meeeeeee
-        # TODO implement the logic ffs
-        # maybe use a last move logic like if enemy last movement was a pawn check if he moved 2 tiles and if adjacent to this one -> can capture
+        # treat enPassant case
 
-        for attack in attacks:
-            if validPos(attack) and attack not in friendlyPositions:
-                left : Piece = b.getPiece((i, j - 1))
-                right : Piece = b.getPiece((i, j + 1))
+        # retrieve last piece moved and its old position
 
-                if isinstance(left, Pawn):
-                    if left.enPassant:
-                        moves.append(attack)
-                if isinstance(right, Pawn):
-                    if right.enPassant:
-                        moves.append(attack)
+        if b.last_move is None:
+            return moves
+        
+        lastPieceMoved : Piece
+        lastPieceMoved, (oldi, oldj) = b.last_move
 
+        # if it isnt a pawn there is no need to check for enPassant
 
+        if not isinstance(lastPieceMoved, Pawn):
+            return moves
+
+        # determine if this pawn's last move was its first by seeing if it moved two squares
+        i, j = lastPieceMoved.position
+
+        dif = abs(i - oldi)
+        # as such it is valid for enPassant attacks
+        attack = (oldi - direction, oldj)
+
+        if attack in attacks and dif == 2:
+            moves.append(attack)
 
         return moves
+    
+    def canPromote(self, move : tuple[int, int]) -> bool:
+        
+        backline = 0 if self.colour == 'white' else 7
+
+        x, _ = move
+
+        if x == backline:
+            return True
+
+        return False

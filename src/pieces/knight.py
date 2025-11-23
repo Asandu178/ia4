@@ -8,6 +8,10 @@ class Knight(Piece):
 
     def __repr__(self):
         return f"{self.type}"
+    
+    def __init__(self, colour, image, position = None):
+        super().__init__(colour, image, position)
+        self.type = 'N' if self.colour == 'white' else 'n'
         
     def moveList(self) -> list[tuple[int, int]]:
 

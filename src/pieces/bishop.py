@@ -5,8 +5,9 @@ class Bishop(Piece):
 
     value = 3
 
-    def __init__(self, type, colour, image, position = None):
-        super().__init__(type, colour, image, position)
+    def __init__(self, colour, image, position = None):
+        super().__init__(colour, image, position)
+        self.type = 'B' if self.colour == 'white' else 'b'
 
 
     def __repr__(self):
