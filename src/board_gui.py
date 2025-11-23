@@ -2,12 +2,12 @@ import pygame
 import os
 from themes import get_theme
 from board.board import Board
-from board.boardLogic import fenToBoard, startingFen
+from board.boardLogic import *
 from board import utils
 from pieces.empty import Empty
 
 # pygame setup
-def boardDisplay(theme_name="gold"):
+def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     running = True
@@ -39,19 +39,22 @@ def boardDisplay(theme_name="gold"):
     possible_moves = []
     
     # Variabile pentru ture
-    current_turn = 'white'  # Albul merge primul
+    current_turn = turn  # Albul merge primul
     font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
 
+    # Variabila suplimentare
+
+    move_cnt = 0
+
     board = Board(8, 8)
-    fenToBoard(board, startingFen)  # Pozitia de start
+    fenToBoard(board, fen)  # Pozitia de start
     
 
     while running:
-        # poll for events
-        # pygame.QUIT event means the user clicked X to close your window
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 col = (mouse_x - board_x) // square_size
@@ -60,43 +63,53 @@ def boardDisplay(theme_name="gold"):
                 if utils.validPos((row, col)):
                     print(f"Clicked on square: ({row}, {col})")
                     
-                    # Daca am o piesa selectata si dau click pe o mutare posibila
-                    if selected_piece_pos and (row, col) in possible_moves:
-                        # Mut piesa
-                        old_row, old_col = selected_piece_pos
-                        piece = board.getPiece(selected_piece_pos)
-                        piece.position = (row, col)
-                        board.board[row][col] = piece
-                        board.board[old_row][old_col] = Empty()
-                        # Schimba tura
-                        if current_turn == 'white':
-                            current_turn = 'black'
-                        else:
-                            current_turn = 'white'
-                        # Reset selectia
+                    # If we have a selected piece and click on valid move
+                    if selected_piece and (row, col) in possible_moves:
+
+                        board.movePiece(selected_piece, (row, col))
+                        # TODO: maybe implement a system that also displays the capture if any happened
+                        # currently only a debugging implementation
+                        # might have to change it to PGN
+                        print(f"#{move_cnt}.{current_turn.capitalize()} moved {selected_piece}{selected_piece_pos} to {(row, col)}")
+                        
+                        # Switch turns
+                        current_turn = 'black' if current_turn == 'white' else 'white'
+                        # Increase move count
+                        move_cnt = move_cnt + 1
+
+                        status = gameState(board, current_turn)
+
+                        winner = 'black' if current_turn == 'white' else 'white'
+
+                        # TODO : handle winning screen !!!!!!!
+
+                        if status == GameStatus.CHECKMATE:
+                            print(f"Winner is {winner} by checkmate after {move_cnt} moves")
+
+                        if status == GameStatus.STALEMATE:
+                            print(f"Stalemate after {move_cnt} moves")
+
+                        if status == GameStatus.TIMEOUT:
+                            print(f"Winner is {winner} by timeout after {move_cnt} moves")
+
+                        if status == GameStatus.RESIGN:
+                            print(f"Winner is {winner} by resignation after {move_cnt} moves")
+
+                        # Reset selection regardless
                         selected_piece = None
                         selected_piece_pos = None
                         possible_moves = []
+
                     else:
-                        # Selectez o noua piesa
+                        # Select new piece
                         piece = board.getPiece((row, col))
-                        if not isinstance(piece, Empty):
-                            # Verifica daca piesa e de culoarea curenta
-                            if piece.colour == current_turn:
-                                selected_piece = piece
-                                selected_piece_pos = (row, col)
-                                # Setez Board și position pe piesă înainte de a calcula mutările
-                                piece.Board = board
-                                piece.position = (row, col)
-                                possible_moves = piece.moveList()
-                                print(f"Selected piece: {piece}, moves: {possible_moves}")
-                            else:
-                                # Nu poti selecta piesa inamicului
-                                selected_piece = None
-                                selected_piece_pos = None
-                                possible_moves = []
+                        if not isinstance(piece, Empty) and piece.colour == current_turn:
+                            selected_piece = piece
+                            selected_piece_pos = (row, col)
+                            possible_moves = getLegalMoves(piece)
+                            print(f"Selected: {piece}, moves: {possible_moves}")
                         else:
-                            # Click pe gol - deselect
+                            # Deselect if clicking empty or opponent piece
                             selected_piece = None
                             selected_piece_pos = None
                             possible_moves = []
@@ -158,7 +171,7 @@ def boardDisplay(theme_name="gold"):
             pygame.draw.circle(screen, (0, 255, 0), (x, y), 15)
             
         # Afiseaza tura curenta
-        turn_text = f"Turn: {current_turn.upper()}"
+        turn_text = f"Turn: {current_turn.capitalize()}"
         turn_surface = font_small.render(turn_text, True, (255, 255, 255))
         screen.blit(turn_surface, (50, 50))
         
@@ -167,5 +180,3 @@ def boardDisplay(theme_name="gold"):
         
 
     pygame.quit()
-
-board("gold")

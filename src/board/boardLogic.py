@@ -1,6 +1,7 @@
 from .board import Board
 from pieces import Piece, Pawn, Knight, Bishop, Rook, Queen, King, Empty
-import random
+from enum import Enum
+import copy
 
 startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
@@ -24,6 +25,13 @@ fenMap = {
     'K' : (King, 'white', 'whiteKing.png'),
 }
 
+class GameStatus(Enum):
+    CHECKMATE = 1
+    TIMEOUT = 2
+    STALEMATE = 3
+    RESIGN = 4
+    ONGOING = 5
+
 
 def _clearBoard(b : Board):
     table = b.board
@@ -41,7 +49,7 @@ def fenToBoard(b : Board, fenNotation : str):
     for letter in fenNotation:
         if letter.isalpha():
             cls, colour, img = fenMap[letter]
-            table[i][j] = cls(letter, colour, img, (i, j))
+            table[i][j] = cls(colour, img, (i, j))
             table[i][j].Board = b
             if colour == 'white':
                 b.white_pieces.append(table[i][j])
@@ -98,50 +106,98 @@ def isCheck(b : Board, colour : str) -> bool:
 
     kingPos = b.getKingPosition(colour)
 
-    if colour == 'white':
-            enemies = b.black_pieces
-    else:
-            enemies = b.white_pieces
+    return isSquareAttacked(b, colour, kingPos)
 
-    for enemy in enemies:
-        if kingPos in enemy.moveList():
-            return True
+def getLegalMoves(p: Piece) -> list[tuple[int, int]]:
     
-    return False
-
-def getLegalMoves(p : Piece) -> list[tuple[int, int]]:
-
-    b : Board = p.Board
+    if not p.Board:
+        return []
     
-    legalMoves = []
-
-    oldPos = p.position
-
     moves = p.moveList()
 
-    for move in moves:
-
-        pieceAtDest = b.board[move[0]][move[1]]
-
-        b.movePiece(p, move)
-
-        if not isCheck(b, p.colour):
-            legalMoves.append(move)
-
-        b.movePiece(p, oldPos)
-        b.board[move[0]][move[1]] = pieceAtDest
-
-    return legalMoves
-
-
-def randomMovePiece(p : Piece):
-    b : Board = p.Board
-    try:
-        newPos = random.choice(getLegalMoves(p))
-        b.movePiece(p, newPos)
-    except IndexError:
-        print("No valid movement")
+    x, y = p.position
     
+    legal_moves = []
+    
+    for move in moves:
+            
+        if not kingInCheckAfterMove(p, move):
+            legal_moves.append(move)
+    
+    return legal_moves
+
+def is_castling_safe(king: King, move: tuple[int, int]) -> bool:
+    board = king.Board
+    current_row, current_col = king.position
+    target_row, target_col = move
+    
+    # King cannot castle if it's currently in check
+    if isCheck(board, king.colour):
+        return False
+    
+    # Figure out which squares the king passes through
+    if target_col > current_col:  
+        # Kingside castling - moving right
+        squares_king_passes_through = [
+            (current_row, current_col + 1),
+            (current_row, current_col + 2)
+        ]
+    else:  
+        # Queenside castling - moving left
+        squares_king_passes_through = [
+            (current_row, current_col - 1),
+            (current_row, current_col - 2)
+        ]
+    
+    # Check if any square along the path is under attack
+    for square in squares_king_passes_through:
+        if isSquareAttacked(board, king.colour, square):
+            return False
+    
+    return True
+
+def isSquareAttacked(board : Board, colour : str, pos : tuple[int, int]) -> bool:
+    enemies = board.white_pieces if colour == 'black' else board.black_pieces
+    for enemy in enemies:
+        if pos in enemy.moveList():
+            return True
+    return False
+
+def kingInCheckAfterMove(piece: Piece, move: tuple[int, int]) -> bool:
+    # Special castling check
+    if isinstance(piece, King) and abs(move[1] - piece.position[1]) == 2:
+        return not is_castling_safe(piece, move)
+    
+    # Normal move check
+    board_copy = copy.deepcopy(piece.Board)
+    copy_piece = board_copy.getPiece(piece.position)
+    board_copy.movePiece(copy_piece, move)
+    return isCheck(board_copy, piece.colour)
+
+
+def gameState(board : Board, player : str) -> GameStatus:
+
+    validMoves = []
+    moves = []
+
+    # TODO: implement winning by time
+
+    pieces = board.white_pieces if player == 'white' else board.black_pieces
+    winner = 'white' if player == 'black' else 'black'
+
+    for piece in pieces:
+        moves = getLegalMoves(piece)
+        if moves != []:
+            validMoves.append(moves)
+    
+    if isCheck(board, player) and validMoves == []:
+        return GameStatus.CHECKMATE
+    
+    if validMoves == []:
+        return GameStatus.STALEMATE
+    
+    return GameStatus.ONGOING
+
         
 
     
