@@ -91,7 +91,7 @@ class Board:
 
         # TODO : make the interface for promotion
         # currently just make a queen
-        img = "placeholder"
+        img = f'{pawn.colour}-queen.png'
         queen = Queen(pawn.colour, img, pawn.position)
         queen.Board = self
 

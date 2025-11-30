@@ -1,5 +1,9 @@
 from .board import Board
 from pieces import Piece, Pawn, Knight, Bishop, Rook, Queen, King, Empty
+from .utils import validPos
+from game.player import Player
+from game.human import Human
+#from game.bot import Bot
 from enum import Enum
 import copy
 
@@ -10,19 +14,19 @@ testFen = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1"
 # map symbol to corresponding class & image
 
 fenMap = {
-    'p' : (Pawn, 'black', 'blackPawn.png'),
-    'n' : (Knight, 'black', 'blackKnight.png'),
-    'b' : (Bishop, 'black', 'blackBishop.png'),
-    'r' : (Rook, 'black', 'blackRook.png'),
-    'q' : (Queen, 'black', 'blackQueen.png'),
-    'k' : (King, 'black', 'blackKing.png'),
+    'p' : (Pawn, 'black', 'black-pawn.png'),
+    'n' : (Knight, 'black', 'black-knight.png'),
+    'b' : (Bishop, 'black', 'black-bishop.png'),
+    'r' : (Rook, 'black', 'black-rook.png'),
+    'q' : (Queen, 'black', 'black-queen.png'),
+    'k' : (King, 'black', 'black-king.png'),
 
-    'P' : (Pawn, 'white', 'whitePawn.png'),
-    'N' : (Knight, 'white', 'whiteKnight.png'),
-    'B' : (Bishop, 'white', 'whiteBishop.png'),
-    'R' : (Rook, 'white', 'whiteRook.png'),
-    'Q' : (Queen, 'white', 'whiteQueen.png'),
-    'K' : (King, 'white', 'whiteKing.png'),
+    'P' : (Pawn, 'white', 'white-pawn.png'),
+    'N' : (Knight, 'white', 'white-knight.png'),
+    'B' : (Bishop, 'white', 'white-bishop.png'),
+    'R' : (Rook, 'white', 'white-rook.png'),
+    'Q' : (Queen, 'white', 'white-queen.png'),
+    'K' : (King, 'white', 'white-king.png'),
 }
 
 class GameStatus(Enum):
@@ -175,28 +179,40 @@ def kingInCheckAfterMove(piece: Piece, move: tuple[int, int]) -> bool:
     return isCheck(board_copy, piece.colour)
 
 
-def gameState(board : Board, player : str) -> GameStatus:
+def gameState(board : Board, player : Player) -> GameStatus:
 
     validMoves = []
     moves = []
 
-    # TODO: implement winning by time
+    if player.timeout():
+        return GameStatus.TIMEOUT
 
-    pieces = board.white_pieces if player == 'white' else board.black_pieces
-    winner = 'white' if player == 'black' else 'black'
+    pieces = board.white_pieces if player.colour == 'white' else board.black_pieces
 
     for piece in pieces:
         moves = getLegalMoves(piece)
         if moves != []:
             validMoves.append(moves)
     
-    if isCheck(board, player) and validMoves == []:
+    if isCheck(board, player.colour) and validMoves == []:
         return GameStatus.CHECKMATE
     
     if validMoves == []:
         return GameStatus.STALEMATE
     
     return GameStatus.ONGOING
+
+def updateEval(board : Board) -> float:
+    Eval : float = 0
+
+    for piece in board.white_pieces:
+        Eval += piece.value
+    
+    for piece in board.black_pieces:
+        Eval -= piece.value
+
+    return Eval
+
 
         
 
