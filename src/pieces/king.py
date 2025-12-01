@@ -4,6 +4,8 @@ from board.utils import *
 
 class King(Piece):
 
+    value = 100
+
     def __repr__(self):
         return f"{self.type}"
     

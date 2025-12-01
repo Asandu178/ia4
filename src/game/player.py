@@ -1,4 +1,5 @@
 from board import Board
+from pieces import Piece
 import time
 class Player:
     def __init__(self, colour : str, name : str, time : int, board : Board = None):
