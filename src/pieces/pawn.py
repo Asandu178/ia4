@@ -69,7 +69,7 @@ class Pawn(Piece):
             return moves
         
         lastPieceMoved : Piece
-        lastPieceMoved, (oldi, oldj) = b.last_move
+        lastPieceMoved, (oldi, oldj), _ = b.last_move
 
         # if it isnt a pawn there is no need to check for enPassant
 

@@ -20,6 +20,7 @@ class ChessGame:
         self.gameOver = False
         self.firstMove = True
         self.score = 0
+        self.status = GameStatus.ONGOING
 
     def handleClick(self, pos : tuple[int, int]) -> bool:
         if self.gameOver or not validPos(pos):
@@ -27,7 +28,11 @@ class ChessGame:
         
         # handle bot movement
         if isinstance(self.currentPlayer, Bot):
-            self.selectedPiece, pos = self.currentPlayer.randomMove()
+            # self.selectedPiece, pos = self.currentPlayer.randomMove()
+            if self.moveCnt <= 6:
+                self.selectedPiece, pos = self.currentPlayer.randomMove()
+            else:
+                self.selectedPiece, pos = self.currentPlayer.decideMove(self.board, self.currentPlayer)
             self.selectedPiecePos = self.selectedPiece.position
             self.possibleMoves = getLegalMoves(self.selectedPiece)
 
@@ -51,6 +56,8 @@ class ChessGame:
 
         print(f'{self.currentPlayer.colour.capitalize()} time left:{self.currentPlayer.time}')
         print(f'{self.moveCnt}# {self.currentPlayer.colour.capitalize()} moved {self.selectedPiece}{self.selectedPiecePos} to {pos}')
+        print(f'{self.board.last_move}')
+        print(f'Current eval score {updateEval(self.board)}')
 
         # switch players
         self.currentPlayer = self.blackPlayer if self.currentPlayer == self.whitePlayer else self.whitePlayer
@@ -82,17 +89,17 @@ class ChessGame:
             self.possibleMoves = []
 
     def _updateGameState(self):
-        status = gameState(self.board, self.currentPlayer)
+        self.status = gameState(self.board, self.currentPlayer)
 
-        if status == GameStatus.CHECKMATE:
+        if self.status == GameStatus.CHECKMATE:
             self.winner = self.winner = 'black' if self.currentPlayer == self.whitePlayer else 'white'
             self.gameOver = True
-        elif status == GameStatus.STALEMATE:
+        elif self.status == GameStatus.STALEMATE:
             self.winner = None
             self.gameOver = True
-        elif status == GameStatus.TIMEOUT:
+        elif self.status == GameStatus.TIMEOUT:
             self.winner = self.winner = 'black' if self.currentPlayer == self.whitePlayer else 'white'
             self.gameOver = True
-        elif status == GameStatus.RESIGN:
+        elif self.status == GameStatus.RESIGN:
             self.winner = self.winner = 'black' if self.currentPlayer == self.whitePlayer else 'white'
             self.gameOver = True

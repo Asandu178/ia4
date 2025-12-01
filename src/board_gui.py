@@ -48,8 +48,9 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
             if event.type == pygame.QUIT:
                 running = False
             if Game.winner != None or Game.gameOver:
-                # TODO : handle gameover screen
-                print("Game over")
+                # TODO : handle gameover screen using
+                print(f'{(f'Winner is {Game.winner.upper()}' if GameStatus.STALEMATE != Game.status else 'Stalemate')} after {Game.moveCnt} moves by {Game.status.name}')
+                
             if not Game.gameOver:
                 if event.type == pygame.MOUSEBUTTONDOWN or isinstance(Game.currentPlayer, Bot):
                     mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -62,7 +63,7 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
                     Game.handleClick(pos)
 
                     # maybe use this ?
-                    state = gameState(Game.board, Game.currentPlayer)
+                    gameState(Game.board, Game.currentPlayer)
 
                     # TODO : handle states using _updateGameState perhaps
 
@@ -126,13 +127,43 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
             y = board_y + row * square_size + square_size // 2
             # Cercul verde pentru mutare
             pygame.draw.circle(screen, (0, 255, 0), (x, y), 15)
+        
+        # Highlight last move
+        if Game.moveCnt > 0 and Game.board.last_move:
+            # Assuming Game.last_move is (piece, original_position)
+            moved_piece, from_pos, _ = Game.board.last_move
             
+            # Highlight FROM square (where piece came from)
+            if from_pos:
+                row, col = from_pos
+                x = board_x + col * square_size
+                y = board_y + row * square_size
+                # Draw semi-transparent overlay
+                highlight_surf = pygame.Surface((square_size, square_size), pygame.SRCALPHA)
+                highlight_surf.fill((50, 255, 50, 64))
+                screen.blit(highlight_surf, (x, y))
+                # Optional: Add border
+                pygame.draw.rect(screen, ((50, 255, 50, 64)), (x, y, square_size, square_size), 3)
+            
+            # Highlight TO square (where piece is now)
+            if moved_piece and hasattr(moved_piece, 'position'):
+                to_pos = moved_piece.position
+                row, col = to_pos
+                x = board_x + col * square_size
+                y = board_y + row * square_size
+                # Draw semi-transparent overlay
+                highlight_surf = pygame.Surface((square_size, square_size), pygame.SRCALPHA)
+                highlight_surf.fill((50, 255, 50, 64))
+                screen.blit(highlight_surf, (x, y))
+                # Optional: Add border
+                pygame.draw.rect(screen, ((50, 255, 50, 64)), (x, y, square_size, square_size), 3)
+                
         # Afiseaza tura curenta
         turn_text = f"Turn: {current_turn.capitalize()}"
         turn_surface = font_small.render(turn_text, True, (255, 255, 255))
         screen.blit(turn_surface, (50, 50))
         # TODO : afiseaza si timpul curent al jucatorilor preferabil sa scada constant, citeste fct din Player pt asta
-        
+            
         # Updatam display
         pygame.display.flip()
         
