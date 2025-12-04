@@ -63,7 +63,6 @@ class ChessGame:
         self.uciMoves.append(moveUCI)
         print(f'{self.currentPlayer.colour.capitalize()} time left:{self.currentPlayer.time}')
         print(f'{self.moveCnt}# {self.currentPlayer.colour.capitalize()} {moveUCI}')
-        print(f'Current eval score {updateEval(self.board)}')
 
         # switch players
         self.currentPlayer = self.blackPlayer if self.currentPlayer == self.whitePlayer else self.whitePlayer
