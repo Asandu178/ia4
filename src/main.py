@@ -2,7 +2,7 @@
 from board import *
 from board.boardLogic import *
 from pieces import *
-from board_gui import *
+from gui.board_gui import *
 from game import chessGame
 
 
