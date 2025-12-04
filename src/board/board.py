@@ -90,7 +90,7 @@ class Board:
                 # capture piece
                 self.board[newPos[0] - direction][newPos[1]] = Empty()
             if piece.canPromote(newPos):
-                p = self.promote(p, promoted_piece_type)
+                piece = self.promote(piece, promoted_piece_type)
 
         if isinstance(piece, Rook) or isinstance(piece, King):
             piece.firstMove = False
