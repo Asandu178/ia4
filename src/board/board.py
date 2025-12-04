@@ -8,6 +8,7 @@ class Board:
     black_pieces : list[Piece] = []
     # last move holds the last piece moved & its original position as well as where it moved to
     last_move : list[tuple[Piece, tuple[int, int], tuple[int, int]]] = None
+    PGNname : list[str] = None
 
     def __init__(self, rows, cols):
         self.rows = rows
@@ -29,40 +30,37 @@ class Board:
             (i, j) = pos
             return self.board[i][j]
         return Empty()
-<<<<<<< HEAD
-=======
     
-    def movePiece(self, p : Piece, newPos : tuple[int, int], promoted_piece_type=None):
+    # def movePiece(self, p : Piece, newPos : tuple[int, int], promoted_piece_type=None):
 
-        x, y = p.position
-        newx, newy = newPos
-        target = self.getPiece(newPos)
+    #     x, y = p.position
+    #     newx, newy = newPos
+    #     target = self.getPiece(newPos)
 
-        if isinstance(p, Pawn):
-            p.firstMove = False
-            # enPassant
-            if isinstance(target, Empty) and newy != y:
-                direction = -1 if p.colour == 'white' else 1
-                self.board[newx - direction][newy] = Empty()
-            if p.canPromote(newPos):
-                p = self.promote(p, promoted_piece_type)
+    #     if isinstance(p, Pawn):
+    #         p.firstMove = False
+    #         # enPassant
+    #         if isinstance(target, Empty) and newy != y:
+    #             direction = -1 if p.colour == 'white' else 1
+    #             self.board[newx - direction][newy] = Empty()
+    #         if p.canPromote(newPos):
+    #             p = self.promote(p, promoted_piece_type)
 
-        if isinstance(p, Rook) or isinstance(p, King):
-            p.firstMove = False
-            if isinstance(p, King) and abs(newy - y) == 2:
-                self.last_move = (p, (x, y))
-                self.castle(p, newPos)
-                return
+    #     if isinstance(p, Rook) or isinstance(p, King):
+    #         p.firstMove = False
+    #         if isinstance(p, King) and abs(newy - y) == 2:
+    #             self.last_move = (p, (x, y))
+    #             self.castle(p, newPos)
+    #             return
 
 
-        self.board[newx][newy] = p
-        self.board[x][y] = Empty()
-        p.position = newPos
+    #     self.board[newx][newy] = p
+    #     self.board[x][y] = Empty()
+    #     p.position = newPos
 
-        self.last_move = (p, (x, y))
->>>>>>> 9e2f7fd (Implement promotion interface for pawn promotions)
+    #     self.last_move = (p, (x, y), newPos)
 
-    def movePiece(self, piece : Piece, newPos : tuple[int, int]) -> dict:
+    def movePiece(self, piece : Piece, newPos : tuple[int, int], promoted_piece_type=None) -> dict:
         self.updateBoard()
         currentPiecePos = piece.position
         targetPiece = self.getPiece(newPos)
@@ -92,7 +90,7 @@ class Board:
                 # capture piece
                 self.board[newPos[0] - direction][newPos[1]] = Empty()
             if piece.canPromote(newPos):
-                piece = self.promote(piece)
+                p = self.promote(p, promoted_piece_type)
 
         if isinstance(piece, Rook) or isinstance(piece, King):
             piece.firstMove = False
@@ -182,10 +180,6 @@ class Board:
         if piece_type is None:
             piece_type = 'Queen'
 
-<<<<<<< HEAD
-        self.setPiece(queen, pawn.position)
-        return queen
-=======
         img = f'{pawn.colour}-{piece_type.lower()}.png'
         
         if piece_type == 'Queen':
@@ -204,7 +198,6 @@ class Board:
         self.setPiece(new_piece, pawn.position)
         print(f"promoted on {pawn.position} to {piece_type}")
         return new_piece
->>>>>>> 9e2f7fd (Implement promotion interface for pawn promotions)
     
     def castle(self, king : King, newPos : tuple[int, int]):
         newx , newy = newPos

@@ -93,6 +93,19 @@ def boardToFen(b : Board) -> str:
         fen += "/"
     return fen
 
+def toPGN(board : Board, orginalStates : dict) -> str:
+    piece : Piece = originalStates['currentPiece']
+    piecePos : tuple[int, int] = originalStates['currentPiecePos']
+    firstMove : bool = originalStates['firstMove']
+    lastMove : list[tuple[Piece, tuple[int, int]]] = originalStates['lastMove']
+    target : Piece = originalStates['targetPiece']
+    targetPos : tuple[int, int] = originalStates['targetPiecePos']
+    enPassant : tuple[int, int] = originalStates['enPassant']
+    rook : Rook = originalStates['castlingRook']
+    rookPos = originalStates['castlingRookInitPos']
+    rookFinal = originalStates['castlingRookFinalPos']
+    pass
+
 
 def updateBoard(b : Board):
     table = b.board

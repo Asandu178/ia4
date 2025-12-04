@@ -51,7 +51,7 @@ class ChessGame:
         
     def _handleMove(self, pos : tuple[int, int], promoted_piece_type=None):
         # make move
-        self.board.movePiece(self.selectedPiece, pos, promoted_piece_type)
+        originalState = self.board.movePiece(self.selectedPiece, pos, promoted_piece_type)
 
         self.moveCnt += 1
         # stop clock only if not first move (since for the first move clock doesnt start)
