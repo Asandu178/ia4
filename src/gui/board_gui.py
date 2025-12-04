@@ -44,7 +44,7 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
     font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
 
     Player1 = Human('white', 'Marius', 600)
-    Player2 = Bot('black', 'Andrei', 600)
+    Player2 = Human('black', 'Andrei', 600)
     Game = ChessGame(Player1, Player2, fen, turn)
     Player1.board = Game.board
     Player2.board = Game.board
@@ -72,6 +72,7 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
                         # Determine color of the current player
                         color = Game.currentPlayer.colour
                         promoted_piece_name = show_promotion_dialog(screen, color)
+                        print(promoted_piece_name)
                         Game.handleClick(pos, promoted_piece_name)
 
                     # maybe use this ?

@@ -30,35 +30,6 @@ class Board:
             (i, j) = pos
             return self.board[i][j]
         return Empty()
-    
-    # def movePiece(self, p : Piece, newPos : tuple[int, int], promoted_piece_type=None):
-
-    #     x, y = p.position
-    #     newx, newy = newPos
-    #     target = self.getPiece(newPos)
-
-    #     if isinstance(p, Pawn):
-    #         p.firstMove = False
-    #         # enPassant
-    #         if isinstance(target, Empty) and newy != y:
-    #             direction = -1 if p.colour == 'white' else 1
-    #             self.board[newx - direction][newy] = Empty()
-    #         if p.canPromote(newPos):
-    #             p = self.promote(p, promoted_piece_type)
-
-    #     if isinstance(p, Rook) or isinstance(p, King):
-    #         p.firstMove = False
-    #         if isinstance(p, King) and abs(newy - y) == 2:
-    #             self.last_move = (p, (x, y))
-    #             self.castle(p, newPos)
-    #             return
-
-
-    #     self.board[newx][newy] = p
-    #     self.board[x][y] = Empty()
-    #     p.position = newPos
-
-    #     self.last_move = (p, (x, y), newPos)
 
     def movePiece(self, piece : Piece, newPos : tuple[int, int], promoted_piece_type=None) -> dict:
         self.updateBoard()
@@ -197,7 +168,6 @@ class Board:
         new_piece.Board = self
 
         self.setPiece(new_piece, newPos)
-        # print(f"promoted on {newPos} to {piece_type}")
         return new_piece
     
     def castle(self, king : King, newPos : tuple[int, int]):

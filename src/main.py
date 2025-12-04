@@ -2,10 +2,8 @@
 from board import *
 from board.boardLogic import *
 from pieces import *
-from board_gui import *
-from game.engine import Engine
+from gui import board_gui
 
-
-boardDisplay()
+board_gui.boardDisplay()
 
 
