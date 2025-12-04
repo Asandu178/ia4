@@ -8,6 +8,12 @@ from game.chessGame import ChessGame
 from game.player import Player
 from game.human import Human
 from game.bot import Bot
+from pieces.queen import Queen
+from pieces.rook import Rook
+from pieces.bishop import Bishop
+from pieces.knight import Knight
+from dialogs import show_promotion_dialog
+
 
 # pygame setup
 def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
@@ -60,7 +66,13 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
                 
                     pos = (row, col)
 
-                    Game.handleClick(pos)
+                    result = Game.handleClick(pos)
+
+                    if result == 'PROMOTION_NEEDED':
+                        # Determine color of the current player
+                        color = Game.currentPlayer.colour
+                        promoted_piece_name = show_promotion_dialog(screen, color)
+                        Game.handleClick(pos, promoted_piece_name)
 
                     # maybe use this ?
                     gameState(Game.board, Game.currentPlayer)

@@ -49,8 +49,10 @@ def fenToBoard(b : Board, fenNotation : str=startingFen):
     table = b.board
     i = 0
     j = 0
+    
+    board_part = fenNotation.split(' ')[0]
 
-    for letter in fenNotation:
+    for letter in board_part:
         if letter.isalpha():
             cls, colour, img = fenMap[letter]
             table[i][j] = cls(colour, img, (i, j))

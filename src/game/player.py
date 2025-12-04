@@ -11,6 +11,8 @@ class Player:
         self.board = None
 
     def timeout(self) -> bool:
+        if self.time is None:
+            return False
         return self.time <= 0
 
     def startClock(self):
@@ -22,7 +24,8 @@ class Player:
         # stop counting
         self.end = time.time()
         # subtract the difference
-        self.time -= (self.end - self.start)
+        if self.time is not None:
+            self.time -= (self.end - self.start)
         
 
 

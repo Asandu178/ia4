@@ -22,7 +22,7 @@ class ChessGame:
         self.score = 0
         self.status = GameStatus.ONGOING
 
-    def handleClick(self, pos : tuple[int, int]) -> bool:
+    def handleClick(self, pos : tuple[int, int], promoted_piece_type=None) -> bool | str:
         if self.gameOver or not validPos(pos):
             return False
         
@@ -37,16 +37,21 @@ class ChessGame:
             self.possibleMoves = getLegalMoves(self.selectedPiece)
 
         if self.selectedPiece and pos in self.possibleMoves:
-            self._handleMove(pos)
+            # Check for promotion
+            if isinstance(self.selectedPiece, Pawn) and self.selectedPiece.canPromote(pos):
+                if promoted_piece_type is None:
+                    return 'PROMOTION_NEEDED'
+            
+            self._handleMove(pos, promoted_piece_type)
             return True
         
         else:
             self._handleSelect(pos)
             return False
         
-    def _handleMove(self, pos : tuple[int, int]):
+    def _handleMove(self, pos : tuple[int, int], promoted_piece_type=None):
         # make move
-        self.board.movePiece(self.selectedPiece, pos)
+        self.board.movePiece(self.selectedPiece, pos, promoted_piece_type)
 
         self.moveCnt += 1
         # stop clock only if not first move (since for the first move clock doesnt start)

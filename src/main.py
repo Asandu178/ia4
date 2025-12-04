@@ -5,6 +5,7 @@ from pieces import *
 from board_gui import *
 from game import chessGame
 
+
 boardDisplay()
 
 
