@@ -12,7 +12,7 @@ from pieces.queen import Queen
 from pieces.rook import Rook
 from pieces.bishop import Bishop
 from pieces.knight import Knight
-from dialogs import show_promotion_dialog
+from .dialogs import show_promotion_dialog
 
 
 # pygame setup
