@@ -147,20 +147,20 @@ class Board:
                     else:
                         self.black_pieces.append(piece)
     
-    def promote(self, pawn : Pawn, newPos : tuple[int, int], piece_type='q') -> Piece:
+    def promote(self, pawn : Pawn, newPos : tuple[int, int], piece_type=None) -> Piece:
 
         if piece_type is None:
-            piece_type = 'q'
+            piece_type = 'Queen'
 
         img = f'{pawn.colour}-{piece_type.lower()}.png'
         
-        if piece_type == 'q':
+        if piece_type == 'Queen':
             new_piece = Queen(pawn.colour, img, newPos)
-        elif piece_type == 'r':
+        elif piece_type == 'Rook':
             new_piece = Rook(pawn.colour, img, newPos)
-        elif piece_type == 'b':
+        elif piece_type == 'Bishop':
             new_piece = Bishop(pawn.colour, img, newPos)
-        elif piece_type == 'n':
+        elif piece_type == 'Knight':
             new_piece = Knight(pawn.colour, img, newPos)
         else:
             new_piece = Queen(pawn.colour, img, newPos)
