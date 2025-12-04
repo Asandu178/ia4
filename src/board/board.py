@@ -90,7 +90,7 @@ class Board:
                 # capture piece
                 self.board[newPos[0] - direction][newPos[1]] = Empty()
             if piece.canPromote(newPos):
-                p = self.promote(p, promoted_piece_type)
+                piece = self.promote(piece, newPos, promoted_piece_type)
 
         if isinstance(piece, Rook) or isinstance(piece, King):
             piece.firstMove = False
@@ -116,6 +116,7 @@ class Board:
         self.setPiece(Empty(), currentPiecePos)
         piece.position = newPos
         self.last_move = (piece, currentPiecePos, newPos)
+        self.updateBoard()
 
         return originalStates
     
@@ -175,28 +176,28 @@ class Board:
                     else:
                         self.black_pieces.append(piece)
     
-    def promote(self, pawn : Pawn, piece_type='Queen') -> Piece:
+    def promote(self, pawn : Pawn, newPos : tuple[int, int], piece_type='q') -> Piece:
 
         if piece_type is None:
-            piece_type = 'Queen'
+            piece_type = 'q'
 
         img = f'{pawn.colour}-{piece_type.lower()}.png'
         
-        if piece_type == 'Queen':
-            new_piece = Queen(pawn.colour, img, pawn.position)
-        elif piece_type == 'Rook':
-            new_piece = Rook(pawn.colour, img, pawn.position)
-        elif piece_type == 'Bishop':
-            new_piece = Bishop(pawn.colour, img, pawn.position)
-        elif piece_type == 'Knight':
-            new_piece = Knight(pawn.colour, img, pawn.position)
+        if piece_type == 'q':
+            new_piece = Queen(pawn.colour, img, newPos)
+        elif piece_type == 'r':
+            new_piece = Rook(pawn.colour, img, newPos)
+        elif piece_type == 'b':
+            new_piece = Bishop(pawn.colour, img, newPos)
+        elif piece_type == 'n':
+            new_piece = Knight(pawn.colour, img, newPos)
         else:
-            new_piece = Queen(pawn.colour, img, pawn.position)
+            new_piece = Queen(pawn.colour, img, newPos)
 
         new_piece.Board = self
 
-        self.setPiece(new_piece, pawn.position)
-        print(f"promoted on {pawn.position} to {piece_type}")
+        self.setPiece(new_piece, newPos)
+        # print(f"promoted on {newPos} to {piece_type}")
         return new_piece
     
     def castle(self, king : King, newPos : tuple[int, int]):

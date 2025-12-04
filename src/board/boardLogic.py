@@ -2,12 +2,9 @@ from .board import Board
 from pieces import Piece, Pawn, Knight, Bishop, Rook, Queen, King, Empty
 from .utils import validPos
 from game.player import Player
-from game.human import Human
-#from game.bot import Bot
 from enum import Enum
-import copy
 
-startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 testFen = "r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1"
 
@@ -70,30 +67,7 @@ def fenToBoard(b : Board, fenNotation : str=startingFen):
             i += 1
             j = 0
 
-
-def boardToFen(b : Board) -> str:
-
-    table = b.board
-    fen = ""
-    i = 0
-    offset = 0
-
-    for line in table:
-        offset = 0
-        for piece in line:
-            if piece.type != "0":
-                if offset != 0:
-                    fen += str(offset)
-                fen += piece.type
-                offset = 0
-            else:
-                offset += 1
-        if offset:
-            fen += str(offset)
-        fen += "/"
-    return fen
-
-def toPGN(board : Board, orginalStates : dict) -> str:
+def toUCI(board : Board, originalStates : dict) -> str:
     piece : Piece = originalStates['currentPiece']
     piecePos : tuple[int, int] = originalStates['currentPiecePos']
     firstMove : bool = originalStates['firstMove']
@@ -104,7 +78,34 @@ def toPGN(board : Board, orginalStates : dict) -> str:
     rook : Rook = originalStates['castlingRook']
     rookPos = originalStates['castlingRookInitPos']
     rookFinal = originalStates['castlingRookFinalPos']
-    pass
+    team = piece.colour
+
+    notation = f"{CoordsToAlgebraic(piecePos)}{CoordsToAlgebraic(enPassant)}"
+    if isinstance(piece, Pawn) and (targetPos[0] == 7 or targetPos[0] == 0):
+        notation += (board.getPiece(targetPos)).type.lower()
+
+    return notation
+
+def fromUCI(uci : str) -> tuple[tuple[int, int], tuple[int, int], str]:
+    initPos = uci[:2]
+    newPos = uci[2:4]
+    promotion = None
+    if len(uci) > 4:
+        promotion = uci[4]
+    return (algebraicToCoords(initPos), algebraicToCoords(newPos), promotion)
+
+
+def algebraicToCoords(square: str) -> tuple[int, int]:
+    row = 8 - int(square[1])
+    col = ord(square[0].lower()) - ord('a')
+    return (row, col)
+
+def CoordsToAlgebraic(coords: tuple[int, int]) -> str:
+    (row, col) = coords
+    algebraic: str = ""
+    algebraic += chr(col + ord('a'))
+    algebraic += str(8 - row)
+    return algebraic
 
 
 def updateBoard(b : Board):
