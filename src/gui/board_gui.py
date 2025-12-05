@@ -43,11 +43,6 @@ def boardDisplay(Player1, Player2, theme_name="gold", fen=startingFen, turn='whi
     current_turn = turn  # Albul merge primul
     font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
 
-<<<<<<< HEAD
-    Player1 = Human('white', 'Marius', 600)
-    Player2 = Bot('black', 'Andrei', 600, 0)
-=======
->>>>>>> 9c8e7db (made stockfish actually work across platforms)
     Game = ChessGame(Player1, Player2, fen, turn)
     Player1.board = Game.board
     Player2.board = Game.board
