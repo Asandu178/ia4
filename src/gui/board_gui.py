@@ -44,7 +44,7 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white'):
     font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
 
     Player1 = Human('white', 'Marius', 600)
-    Player2 = Human('black', 'Andrei', 600)
+    Player2 = Bot('black', 'Andrei', 600, 0)
     Game = ChessGame(Player1, Player2, fen, turn)
     Player1.board = Game.board
     Player2.board = Game.board

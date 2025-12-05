@@ -111,6 +111,20 @@ class ChessGame:
             self.winner = self.winner = 'black' if self.currentPlayer == self.whitePlayer else 'white'
             self.gameOver = True
 
+    def applyExternalMove(self, start_pos, end_pos, promotion_type=None):
+      
+        piece = self.board.getPiece(start_pos)
+        if isinstance(piece, Empty):
+            print(f"Error: No piece at {start_pos} for external move")
+            return
+
+        self.selectedPiece = piece
+        self.selectedPiecePos = start_pos
+
+        self.possibleMoves = getLegalMoves(self.selectedPiece) 
+        
+        self._handleMove(end_pos, promotion_type)
+
     def castleRight(self, colour : str) -> str:
 
         rights : str = ""
