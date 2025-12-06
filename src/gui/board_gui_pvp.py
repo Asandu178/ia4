@@ -16,7 +16,7 @@ from .dialogs import show_promotion_dialog
 
 
 # pygame setup
-def boardDisplay(theme_name="gold", fen=startingFen, turn='white', network=None, player_color=None):
+def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen, turn='white', network=None, player_color=None):
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     running = True
@@ -40,11 +40,16 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white', network=None,
     border_color = theme["border"]
     
     # Variabile pentru ture
-    current_turn = turn  # Albul merge primul
+    # current_turn is now dynamic based on Game.currentPlayer
     font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
 
-    Player1 = Human('white', 'Marius', 600)
-    Player2 = Human('black', 'Andrei', 600)
+    if not player1:
+        player1 = Human('white', 'Marius', 600)
+    if not player2:
+        player2 = Human('black', 'Andrei', 600)
+
+    Player1 = player1
+    Player2 = player2
     Game = ChessGame(Player1, Player2, fen, turn)
     Player1.board = Game.board
     Player2.board = Game.board
@@ -184,7 +189,7 @@ def boardDisplay(theme_name="gold", fen=startingFen, turn='white', network=None,
                 pygame.draw.rect(screen, ((50, 255, 50, 64)), (x, y, square_size, square_size), 3)
                 
         # Afiseaza tura curenta
-        turn_text = f"Turn: {current_turn.capitalize()}"
+        turn_text = f"Turn: {Game.currentPlayer.colour.capitalize()}"
         turn_surface = font_small.render(turn_text, True, (255, 255, 255))
         screen.blit(turn_surface, (50, 50))
         # TODO : afiseaza si timpul curent al jucatorilor preferabil sa scada constant, citeste fct din Player pt asta
