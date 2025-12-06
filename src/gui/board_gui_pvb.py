@@ -1,4 +1,6 @@
 import pygame
+import threading
+import queue
 from themes import get_theme
 from board.board import Board
 from board.boardLogic import *
@@ -15,8 +17,17 @@ from pieces.knight import Knight
 from .dialogs import show_promotion_dialog
 
 
+# Helper function for threaded bot move calculation
+def get_bot_move(game, move_queue):
+    # This runs in a separate thread
+    try:
+        move = game.currentPlayer.decideMove([], game.boardToFen())
+        move_queue.put(move)
+    except Exception as e:
+        print(f"Error in bot thread: {e}")
+
 # pygame setup
-def boardDisplayPvB(theme_name="gold", fen=startingFen, turn='white'):
+def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingFen, turn='white'):
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     running = True
@@ -40,14 +51,23 @@ def boardDisplayPvB(theme_name="gold", fen=startingFen, turn='white'):
     border_color = theme["border"]
     
     # Variabile pentru ture
-    current_turn = turn  # Albul merge primul
+    # current_turn is now dynamic based on Game.currentPlayer
     font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
 
-    Player1 = Human('white', 'Marius', 600)
-    Player2 = Bot('black', 'Andrei', 600)
+    if not player1:
+        player1 = Human('white', 'Marius', 600)
+    if not player2:
+        player2 = Bot('black', 'Andrei', 600)
+        
+    Player1 = player1
+    Player2 = player2
     Game = ChessGame(Player1, Player2, fen, turn)
     Player1.board = Game.board
     Player2.board = Game.board
+
+    # Threading setup
+    move_queue = queue.Queue()
+    is_thinking = False
 
     while running:
         for event in pygame.event.get():
@@ -58,7 +78,8 @@ def boardDisplayPvB(theme_name="gold", fen=startingFen, turn='white'):
                 print(f'{(f'Winner is {Game.winner.upper()}' if GameStatus.STALEMATE != Game.status else 'Stalemate')} after {Game.moveCnt} moves by {Game.status.name}')
                 
             if not Game.gameOver:
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                # Handle Human Input
+                if not isinstance(Game.currentPlayer, Bot) and event.type == pygame.MOUSEBUTTONDOWN and not is_thinking:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     col = (mouse_x - board_x) // square_size
                     row = (mouse_y - board_y) // square_size
@@ -79,11 +100,30 @@ def boardDisplayPvB(theme_name="gold", fen=startingFen, turn='white'):
 
                     # TODO : handle states using _updateGameState perhaps
 
-        # Bot Move Logic
+        # Bot Move Logic (Threaded)
         if not Game.gameOver and isinstance(Game.currentPlayer, Bot):
-            # Pass a dummy valid position (0,0) - Bot logic in handleClick ignores this but checks validity
-            Game.handleClick((0, 0))
-            gameState(Game.board, Game.currentPlayer)
+            if not is_thinking:
+                is_thinking = True
+                bot_thread = threading.Thread(target=get_bot_move, args=(Game, move_queue))
+                bot_thread.daemon = True # Daemon thread dies if main program exits
+                bot_thread.start()
+            
+            # Check if bot has found a move
+            try:
+                # Non-blocking get
+                move = move_queue.get_nowait()
+                start_pos, end_pos, promotion_type = move
+                
+                # Apply the move
+                # We use applyExternalMove because it handles selection and move logic cleanly
+                # even though it's technically "internal" to the bot logic here
+                Game.applyExternalMove(start_pos, end_pos, promotion_type)
+                
+                gameState(Game.board, Game.currentPlayer)
+                is_thinking = False
+                
+            except queue.Empty:
+                pass # Still thinking
 
         # Umplu ecranul cu culoarea din temă
         screen.fill(background)
@@ -177,7 +217,7 @@ def boardDisplayPvB(theme_name="gold", fen=startingFen, turn='white'):
                 pygame.draw.rect(screen, ((50, 255, 50, 64)), (x, y, square_size, square_size), 3)
                 
         # Afiseaza tura curenta
-        turn_text = f"Turn: {current_turn.capitalize()}"
+        turn_text = f"Turn: {Game.currentPlayer.colour.capitalize()}"
         turn_surface = font_small.render(turn_text, True, (255, 255, 255))
         screen.blit(turn_surface, (50, 50))
         # TODO : afiseaza si timpul curent al jucatorilor preferabil sa scada constant, citeste fct din Player pt asta
