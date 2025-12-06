@@ -13,7 +13,11 @@ class Network:
     def connect(self):
         try:
             self.client.connect(self.addr)
-            return self.client.recv(2048).decode()
+            # Receive pickle data directly
+            data = self.client.recv(2048)
+            config = pickle.loads(data)
+            self.time_limit = config.get('time_limit')
+            return config.get('player_id')
         except:
             pass
 
