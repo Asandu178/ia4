@@ -15,7 +15,9 @@ from pieces.rook import Rook
 from pieces.bishop import Bishop
 from pieces.knight import Knight
 from .dialogs import show_promotion_dialog
-
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ASSETS_DIR = os.path.join(BASE_DIR, 'assets')   
 
 # Helper function for threaded bot move calculation
 def get_bot_move(game, move_queue):
@@ -144,6 +146,8 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
                 # Desenez patratul
                 pygame.draw.rect(screen, color, (x, y, square_size, square_size))
         
+   
+
         for row in range(Board_side):
             for col in range(Board_side):
                 piece = Game.board.getPiece((row, col))
@@ -153,7 +157,11 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
                     y = board_y + row * square_size
                     
                     # Get the PNG image for this piece
-                    image = pygame.image.load(f'./assets/{piece.image}')
+                    image_path = os.path.join(ASSETS_DIR, piece.image)
+                    try:
+                        image = pygame.image.load(image_path)
+                    except FileNotFoundError:
+                        image = None
                     
                     if image:
                         # Center the image in the square
@@ -226,4 +234,4 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
         pygame.display.flip()
         
 
-    pygame.quit()
+    

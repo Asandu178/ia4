@@ -1,4 +1,5 @@
 import pygame
+import time
 from themes import get_theme
 from board.board import Board
 from board.boardLogic import *
@@ -13,10 +14,12 @@ from pieces.rook import Rook
 from pieces.bishop import Bishop
 from pieces.knight import Knight
 from .dialogs import show_promotion_dialog
-
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ASSETS_DIR = os.path.join(BASE_DIR, 'assets')
 
 # pygame setup
-def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen, turn='white', network=None, player_color=None):
+def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen, turn='white', network=None, player_color=None, time_limit=None):
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     running = True
@@ -40,21 +43,35 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
     border_color = theme["border"]
     
     # Variabile pentru ture
-    # current_turn is now dynamic based on Game.currentPlayer
     font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
+    font_timer = pygame.font.Font(None, 80) # Font perntru timer
 
     if not player1:
         player1 = Human('white', 'Marius', 600)
+        # Check if time_limit is provided, otherwise default to 600 or player default
+        if time_limit is not None:
+             player1.time = time_limit
     if not player2:
         player2 = Human('black', 'Andrei', 600)
+        if time_limit is not None:
+             player2.time = time_limit
 
     Player1 = player1
     Player2 = player2
     Game = ChessGame(Player1, Player2, fen, turn)
     Player1.board = Game.board
     Player2.board = Game.board
+    
+    if time_limit is not None:
+        Player1.time = time_limit
+        Player2.time = time_limit
+        
+    start_ticks = pygame.time.get_ticks()
 
     while running:
+        current_time = pygame.time.get_ticks()
+        
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -63,6 +80,14 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
                 print(f'{(f'Winner is {Game.winner.upper()}' if GameStatus.STALEMATE != Game.status else 'Stalemate')} after {Game.moveCnt} moves by {Game.status.name}')
                 
             if not Game.gameOver:
+                # Update current player time check for timeout
+                if Game.currentPlayer.time is not None:
+                    # Calculate elapsed since start of turn
+                     elapsed = time.time() - Game.currentPlayer.start
+                     if Game.currentPlayer.time - elapsed <= 0:
+                         Game.status = GameStatus.TIMEOUT
+                         Game._updateGameState() # Trigger timeout logic
+
                 if network and Game.currentPlayer.colour != player_color:
                     move = network.receive()
                     if move:
@@ -116,6 +141,8 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
                 # Desenez patratul
                 pygame.draw.rect(screen, color, (x, y, square_size, square_size))
         
+
+
         for row in range(Board_side):
             for col in range(Board_side):
                 piece = Game.board.getPiece((row, col))
@@ -125,7 +152,11 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
                     y = board_y + row * square_size
                     
                     # Get the PNG image for this piece
-                    image = pygame.image.load(f'./assets/{piece.image}')
+                    image_path = os.path.join(ASSETS_DIR, piece.image)
+                    try:
+                        image = pygame.image.load(image_path)
+                    except FileNotFoundError:
+                        image = None
                     
                     if image:
                         # Center the image in the square
@@ -192,10 +223,39 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
         turn_text = f"Turn: {Game.currentPlayer.colour.capitalize()}"
         turn_surface = font_small.render(turn_text, True, (255, 255, 255))
         screen.blit(turn_surface, (50, 50))
-        # TODO : afiseaza si timpul curent al jucatorilor preferabil sa scada constant, citeste fct din Player pt asta
+        
+        # Display Timers
+        if time_limit is not None:
+             def format_time(seconds):
+                 mins = int(seconds) // 60
+                 secs = int(seconds) % 60
+                 return f"{mins:02}:{secs:02}"
+             
+             # Calculate real-time value for current player
+             p1_time = Player1.time
+             if Game.currentPlayer == Player1 and not Game.firstMove and not Game.gameOver:
+                 p1_time -= (time.time() - Player1.start)
+             
+             p2_time = Player2.time
+             if Game.currentPlayer == Player2 and not Game.firstMove and not Game.gameOver:
+                 p2_time -= (time.time() - Player2.start)
+                 
+             # Clamp to 0
+             p1_time = max(0, p1_time)
+             p2_time = max(0, p2_time)
+             
+             p1_timer_surf = font_timer.render(format_time(p1_time), True, (255, 255, 255) if Game.currentPlayer == Player1 else (150, 150, 150))
+             p2_timer_surf = font_timer.render(format_time(p2_time), True, (255, 255, 255) if Game.currentPlayer == Player2 else (150, 150, 150))
+             
+             # Position timers (e.g., left side)
+             screen.blit(p1_timer_surf, (50, 150)) # Player 1 (White)
+             screen.blit(p2_timer_surf, (50, 250)) # Player 2 (Black) - maybe improve positioning later
+             
+             pygame.draw.circle(screen, (255, 255, 255), (30, 175), 10) # White indicator
+             pygame.draw.circle(screen, (0, 0, 0), (30, 275), 10) # Black indicator
             
         # Updatam display
         pygame.display.flip()
         
 
-    pygame.quit()
+    

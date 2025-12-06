@@ -3,7 +3,7 @@ import threading
 import pickle
 
 class Server:
-    def __init__(self, host='0.0.0.0', port=5555):
+    def __init__(self, host='0.0.0.0', port=5555, time_limit=None):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host = host
         self.port = port
@@ -11,6 +11,7 @@ class Server:
         self.server.listen(2)
         print("Waiting for a connection, Server Started")
         self.clients = []
+        self.time_limit = time_limit
 
     def broadcast(self, data, sender_conn):
         for client in self.clients:
@@ -21,7 +22,14 @@ class Server:
                     self.clients.remove(client)
 
     def handle_client(self, conn, player_id):
-        conn.send(str.encode(str(player_id)))
+        # Protocol: Send dictionary with config as first message
+        # Use pickle for ease of sending complex data
+        config = {
+            'player_id': player_id,
+            'time_limit': self.time_limit
+        }
+        conn.send(pickle.dumps(config))
+        
         while True:
             try:
                 data = conn.recv(2048)
