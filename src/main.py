@@ -8,14 +8,14 @@ from game import chessGame
 from game import human
 from game import bot
 from game import engine
-from game import imageHandler
+from game import assetsHandler
 from network.network import Network
 import server
 import threading
 from menu.central_menu import main_menu
 
 def main():
-    imageHandler.imageHandler.loadImages()
+    assetsHandler.assetsHandler.loadAssets()
     engine.Engine.buildEngine()
     main_menu()
 
