@@ -29,7 +29,7 @@ def get_bot_move(game, move_queue):
         print(f"Error in bot thread: {e}")
 
 # pygame setup
-def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingFen, turn='white'):
+def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingFen, turn='white', bot_depth=5):
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     running = True
@@ -59,7 +59,7 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
     if not player1:
         player1 = Human('white', 'Marius', 600)
     if not player2:
-        player2 = Bot('black', 'Andrei', 600)
+        player2 = Bot('black', 'Andrei', 600, depth=bot_depth)
         
     Player1 = player1
     Player2 = player2

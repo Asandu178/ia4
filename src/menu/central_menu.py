@@ -8,18 +8,21 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from menu.Button import Button
 from menu.background import create_background
 from menu.menu_pvp import pvp_menu
-from gui.board_gui_pvb import boardDisplayPvB
+from menu.menu_pvb import pvb_menu
+from gui.board_gui_puzzle import boardDisplayPuzzle
 
 def start_pvp():
     pvp_menu()
 
 def start_pvb():
-    boardDisplayPvB()
+    pvb_menu()
     pygame.display.set_mode((800, 600))
     pygame.display.set_caption("Chess Game - Main Menu")
 
 def start_puzzle():
-    print("Puzzle mode not implemented yet")
+    boardDisplayPuzzle()
+    pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Chess Game - Main Menu")
 
 def start_preferences():
     print("Preferences not implemented yet")

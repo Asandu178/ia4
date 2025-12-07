@@ -14,6 +14,9 @@ class Board:
         self.rows = rows
         self.cols = cols
         self.board = [[Empty() for _ in range(cols)] for _ in range(rows)]
+        self.white_pieces = []
+        self.black_pieces = []
+        self.last_move = None
         # 0 for white, 1 for black
         self.turn = 0
         print(self)
