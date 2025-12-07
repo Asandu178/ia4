@@ -85,4 +85,13 @@ def time_selection_menu():
 
         pygame.display.flip()
 
+    
+    # Wait for mouse release to prevent double clicking through menus
+    while pygame.mouse.get_pressed()[0]:
+        for event in pygame.event.get():
+             if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        pygame.time.wait(10)
+
     return selected_time

@@ -31,7 +31,12 @@ def start_host_game():
 
     print("Starting server...")
     # Start server in a separate thread
-    s = server.Server(time_limit=time_limit)
+    try:
+        s = server.Server(time_limit=time_limit)
+    except OSError as e:
+        print(f"Error starting server: {e}")
+        return
+
     t = threading.Thread(target=s.run)
     t.daemon = True
     t.start()
@@ -54,18 +59,33 @@ def start_host_game():
     waiting = True
     player_connected = False
     
+    
+    # Back button
+    btn_back = Button(20, 20, 150, 50, 'Back', back_to_main)
+
     while waiting:
+        events = pygame.event.get()
         # Check if we have 2 clients (Host + Opponent)
         # s.clients is updated in the server thread
         if len(s.clients) >= 2:
             player_connected = True
             waiting = False
             
-        for event in pygame.event.get():
+        for event in events:
             if event.type == pygame.QUIT:
+                s.stop()
+                t.join(timeout=1.0)
                 pygame.quit()
                 sys.exit()
-                
+        
+        # Process Back button
+        action = btn_back.process()
+        if action == "BACK":
+            s.stop()
+            # Wait for thread to finish to ensure port is released
+            t.join(timeout=1.0) 
+            return
+
         # Draw
         screen.blit(wall_surface, (0, 0))
         
@@ -85,6 +105,8 @@ def start_host_game():
         screen.blit(shadow_surf, shadow_rect)
         screen.blit(text_surf, text_rect)
         
+        btn_back.draw(screen)
+        
         pygame.display.flip()
         pygame.time.wait(100) # Small delay to reduce CPU usage
 
@@ -96,17 +118,84 @@ def start_host_game():
     pygame.display.set_mode((800, 600))
     pygame.display.set_caption("Chess Game - PvP Menu")
 
-def start_join_game():
-    # TODO: Create a GUI for IP input. For now, using console as requested.
-    pygame.display.quit() # Close window temporarily to focus on console
-    ip = input("Enter Host IP (default localhost): ") or 'localhost'
-    pygame.display.init() 
-    
-    network = Network(ip)
+from menu.TextInput import TextInputBox
 
+def start_join_game():
+    pygame.init()
+    screen_width = 800
+    screen_height = 600
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    pygame.display.set_caption("Chess Game - Join Game")
+
+    # Generate background
+    wall_surface = create_background(screen_width, screen_height)
     
-    player_color = 'black'
-    boardDisplayPvP(network=network, player_color=player_color, time_limit=network.time_limit)
+    # Create Text Input Box
+    input_box_width = 400
+    input_box_height = 60
+    input_box_x = (screen_width - input_box_width) // 2
+    input_box_y = (screen_height - input_box_height) // 2
+    
+    input_box = TextInputBox(input_box_x, input_box_y, input_box_width, input_box_height, placeholder="Enter IP (default: localhost)")
+    
+    font_instr = pygame.font.Font(None, 40)
+    instruction_text = font_instr.render("Enter Host IP:", True, (255, 255, 255))
+    instruction_rect = instruction_text.get_rect(center=(screen_width // 2, input_box_y - 50))
+    
+    # Back Button
+    btn_back = Button(20, 20, 150, 50, 'Back', back_to_main)
+
+    ip = None
+    running = True
+    
+    while running:
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                
+            input_box.handle_event(event)
+            
+            
+        action = btn_back.process()
+        if action == "BACK":
+            return # Return to PvP menu
+
+        if input_box.done:
+            ip = input_box.text
+            if not ip:
+                ip = 'localhost'
+            running = False
+
+        # Draw
+        screen.blit(wall_surface, (0, 0))
+        
+        screen.blit(instruction_text, instruction_rect)
+        input_box.draw(screen)
+        btn_back.draw(screen)
+        
+        pygame.display.flip()
+        pygame.time.wait(30)
+
+    if ip:
+        print(f"Connecting to {ip}...")
+        try:
+            network = None
+            # Draw the "Connecting..." screen
+            screen.blit(wall_surface, (0, 0))
+            connect_text = font_instr.render(f"Connecting to {ip}...", True, (255, 255, 255))
+            connect_rect = connect_text.get_rect(center=(screen_width // 2, screen_height // 2))
+            screen.blit(connect_text, connect_rect)
+            pygame.display.flip()
+            
+            # Attempt connection
+            network = Network(ip)
+            
+            player_color = 'black'
+            boardDisplayPvP(network=network, player_color=player_color, time_limit=network.time_limit)
+        except Exception as e:
+            print(f"Connection failed: {e}")
     
     # Reset display mode after game ends
     pygame.display.set_mode((800, 600))
