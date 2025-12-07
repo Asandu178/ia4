@@ -76,6 +76,7 @@ def setup_game(fen_string):
         turn = 'black'
         
     game = ChessGame(Human('white','Player',600), Human('black','Player',600), fen_string, turn)
+    game.board.updateBoard()
     return game, turn
 
 # Main function for displaying the puzzle board

@@ -145,6 +145,11 @@ class Board:
         for line in self.board:
             for piece in line:
                 if not piece.type == "0":
+                    if isinstance(piece, Pawn):
+                        if piece.position[0] != 6 and piece.colour == 'white':
+                            piece.firstMove = False
+                        if piece.position[0] != 1 and piece.colour == 'black':
+                            piece.firstMove = False
                     if piece.colour == 'white':
                         self.white_pieces.append(piece)
                     else:

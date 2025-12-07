@@ -10,13 +10,14 @@ class Engine:
             self.buildEngine()
 
     @staticmethod
-    def buildEngine():
-        p = Popen([f"wget -P ./game https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-ubuntu-x86-64-avx2.tar"], shell=True)
-        time.sleep(5)
-        p = Popen([f"cd ./game &&  tar -xvf stockfish-ubuntu-x86-64-avx2.tar && rm stockfish-ubuntu-x86-64-avx2.tar"], shell=True)
-        time.sleep(5)
-        p = Popen(["cd ./game/stockfish/src && make -j profile-build"], shell=True)
-        time.sleep(60)
+    def buildEngine(pathToEngine="./game/stockfish/src/stockfish"):
+        if not os.path.exists(pathToEngine):
+            p = Popen([f"wget -P ./game https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-ubuntu-x86-64-avx2.tar"], shell=True)
+            time.sleep(5)
+            p = Popen([f"cd ./game &&  tar -xvf stockfish-ubuntu-x86-64-avx2.tar && rm stockfish-ubuntu-x86-64-avx2.tar"], shell=True)
+            time.sleep(5)
+            p = Popen(["cd ./game/stockfish/src && make -j profile-build"], shell=True)
+            time.sleep(60)
     
     def evaluatePos(self, moves: list[str]=[], fen: str=startingFen) -> str:
         p = Popen([self.pathToEngine], stdout=PIPE, stdin=PIPE, stderr=PIPE, text=True)
