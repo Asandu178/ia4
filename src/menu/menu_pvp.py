@@ -193,7 +193,7 @@ def start_join_game():
             network = Network(ip)
             
             player_color = 'black'
-            boardDisplayPvP(network=network, player_color=player_color, time_limit=network.time_limit)
+            boardDisplayPvP(network=network, player_color=player_color, time_limit=300)
         except Exception as e:
             print(f"Connection failed: {e}")
     
