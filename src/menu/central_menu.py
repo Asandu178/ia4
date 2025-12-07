@@ -11,6 +11,8 @@ from menu.menu_pvp import pvp_menu
 from menu.menu_pvb import pvb_menu
 from gui.board_gui_puzzle import boardDisplayPuzzle
 
+from menu.preferences import preferences_menu
+
 def start_pvp():
     pvp_menu()
 
@@ -25,7 +27,9 @@ def start_puzzle():
     pygame.display.set_caption("Chess Game - Main Menu")
 
 def start_preferences():
-    print("Preferences not implemented yet")
+    preferences_menu()
+    pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Chess Game - Main Menu")
 
 def quit_game():
     pygame.quit()

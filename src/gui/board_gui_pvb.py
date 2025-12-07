@@ -1,5 +1,6 @@
 import pygame
 import threading
+import time
 import queue
 from themes import get_theme
 from board.board import Board
@@ -15,9 +16,28 @@ from pieces.rook import Rook
 from pieces.bishop import Bishop
 from pieces.knight import Knight
 from .dialogs import show_promotion_dialog
+from settings import SettingsManager
 import os
+
+PIECE_MAPPING = {
+    'white-pawn.png': 'wp.png',
+    'white-rook.png': 'wr.png',
+    'white-knight.png': 'wn.png',
+    'white-bishop.png': 'wb.png',
+    'white-queen.png': 'wq.png',
+    'white-king.png': 'wk.png',
+    'black-pawn.png': 'bp.png',
+    'black-rook.png': 'br.png',
+    'black-knight.png': 'bn.png',
+    'black-bishop.png': 'bb.png',
+    'black-queen.png': 'bq.png',
+    'black-king.png': 'bk.png'
+}
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ASSETS_DIR = os.path.join(BASE_DIR, 'assets')   
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ASSETS_DIR = os.path.join(BASE_DIR, 'assets') 
+BOARDS_DIR = os.path.join(ASSETS_DIR, 'boards')
+PIECES_DIR = os.path.join(ASSETS_DIR, 'pieces')  
 
 # Helper function for threaded bot move calculation
 def get_bot_move(game, move_queue):
@@ -46,16 +66,35 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
     board_y = (1080 - board_height) // 2
     
     # Importez tema aleasa
-    theme = get_theme(theme_name)
-    white = theme["light_square"]
-    black = theme["dark_square"]
-    background = theme["background"]
-    border_color = theme["border"]
+    # Import themes from SettingsManager
+    theme_board_name = SettingsManager.get_theme_board()
+    theme_piece_name = SettingsManager.get_theme_pieces()
+    
+    # Board Background handling
+    board_image = None
+    if theme_board_name != "Classic":
+        board_img_path = os.path.join(BOARDS_DIR, theme_board_name)
+        if os.path.exists(board_img_path):
+             try:
+                 loaded_img = pygame.image.load(board_img_path)
+                 board_image = pygame.transform.scale(loaded_img, (board_width, board_height))
+             except:
+                 pass
+    
+    if not board_image:
+        theme = get_theme("classic") # Default fallback
+        theme_data = get_theme(theme_board_name.replace(".png","").lower()) 
+        
+        white = theme_data.get("light_square", (240, 217, 181))
+        black = theme_data.get("dark_square", (181, 136, 99))
+        background = theme_data.get("background", (30, 30, 30))
+    else:
+        background = (30, 30, 30)
+
     
     # Variabile pentru ture
     # current_turn is now dynamic based on Game.currentPlayer
     font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
-
     if not player1:
         player1 = Human('white', 'Marius', 600)
     if not player2:
@@ -131,20 +170,24 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
         screen.fill(background)
         
         # Desenez tabla de șah
-        for row in range(Board_side):
-            for col in range(Board_side):
-                # Calcul pozitie
-                x = board_x + col * square_size
-                y = board_y + row * square_size
-                
-                # Aleg culoare (alb daca suma e para, negru daca e impara)
-                if (row + col) % 2 == 0:
-                    color = white
-                else:
-                    color = black
-                
-                # Desenez patratul
-                pygame.draw.rect(screen, color, (x, y, square_size, square_size))
+        # Desenez tabla de șah
+        if board_image:
+             screen.blit(board_image, (board_x, board_y))
+        else:
+            for row in range(Board_side):
+                for col in range(Board_side):
+                    # Calcul pozitie
+                    x = board_x + col * square_size
+                    y = board_y + row * square_size
+                    
+                    # Aleg culoare (alb daca suma e para, negru daca e impara)
+                    if (row + col) % 2 == 0:
+                        color = white
+                    else:
+                        color = black
+                    
+                    # Desenez patratul
+                    pygame.draw.rect(screen, color, (x, y, square_size, square_size))
         
    
 
@@ -157,7 +200,20 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
                     y = board_y + row * square_size
                     
                     # Get the PNG image for this piece
-                    image_path = os.path.join(ASSETS_DIR, piece.image)
+                    image_path = None
+                    theme_specific_path = os.path.join(PIECES_DIR, theme_piece_name, piece.image)
+                    default_path = os.path.join(ASSETS_DIR, piece.image)
+                    
+                    if piece.image in PIECE_MAPPING:
+                        mapped_name = PIECE_MAPPING[piece.image]
+                        mapped_path = os.path.join(PIECES_DIR, theme_piece_name, mapped_name)
+                        if os.path.exists(mapped_path):
+                            image_path = mapped_path
+                        else:
+                            image_path = default_path
+                    else:
+                         image_path = default_path
+
                     try:
                         image = pygame.image.load(image_path)
                     except FileNotFoundError:
@@ -228,7 +284,6 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
         turn_text = f"Turn: {Game.currentPlayer.colour.capitalize()}"
         turn_surface = font_small.render(turn_text, True, (255, 255, 255))
         screen.blit(turn_surface, (50, 50))
-        # TODO : afiseaza si timpul curent al jucatorilor preferabil sa scada constant, citeste fct din Player pt asta
             
         # Updatam display
         pygame.display.flip()

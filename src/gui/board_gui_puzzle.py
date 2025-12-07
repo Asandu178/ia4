@@ -19,10 +19,28 @@ from game.human import Human
 from game.bot import Bot
 from .dialogs import show_promotion_dialog
 from menu.Button import Button
+from settings import SettingsManager
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS_DIR = os.path.join(BASE_DIR, 'assets')
+BOARDS_DIR = os.path.join(ASSETS_DIR, 'boards')
+PIECES_DIR = os.path.join(ASSETS_DIR, 'pieces')
 PUZZLES_FILE = os.path.join(ASSETS_DIR, 'puzzles.txt')
+
+PIECE_MAPPING = {
+    'white-pawn.png': 'wp.png',
+    'white-rook.png': 'wr.png',
+    'white-knight.png': 'wn.png',
+    'white-bishop.png': 'wb.png',
+    'white-queen.png': 'wq.png',
+    'white-king.png': 'wk.png',
+    'black-pawn.png': 'bp.png',
+    'black-rook.png': 'br.png',
+    'black-knight.png': 'bn.png',
+    'black-bishop.png': 'bb.png',
+    'black-queen.png': 'bq.png',
+    'black-king.png': 'bk.png'
+}
 
 # Load a random fen string from the puzzles file
 def load_random_fen():
@@ -75,10 +93,32 @@ def boardDisplayPuzzle(theme_name="gold"):
     board_x = 300
     board_y = (1080 - board_height) // 2
     
-    theme = get_theme(theme_name)
-    light_color = theme["light_square"]
-    dark_color = theme["dark_square"]
-    background_color = theme["background"]
+    
+    # Import themes from SettingsManager
+    theme_board_name = SettingsManager.get_theme_board()
+    theme_piece_name = SettingsManager.get_theme_pieces()
+    
+    # Board Background handling
+    board_image = None
+    if theme_board_name != "Classic":
+        board_img_path = os.path.join(BOARDS_DIR, theme_board_name)
+        if os.path.exists(board_img_path):
+             try:
+                 loaded_img = pygame.image.load(board_img_path)
+                 board_image = pygame.transform.scale(loaded_img, (board_width, board_height))
+             except:
+                 pass 
+    
+    if not board_image:
+        theme = get_theme("classic") 
+        theme_data = get_theme(theme_board_name.replace(".png","").lower()) 
+        
+        light_color = theme_data.get("light_square", (240, 217, 181))
+        dark_color = theme_data.get("dark_square", (181, 136, 99))
+        background_color = theme_data.get("background", (30, 30, 30))
+    else:
+        background_color = (30, 30, 30)
+    
     
     font_msg = pygame.font.Font(None, 60)
     
@@ -223,17 +263,26 @@ def boardDisplayPuzzle(theme_name="gold"):
         current_game = puzzle_data['game']
         
         # Draw squares
+        if board_image:
+             screen.blit(board_image, (board_x, board_y))
+        else:
+            for r in range(8):
+                for c in range(8):
+                    x = board_x + c * square_size
+                    y = board_y + r * square_size
+                    
+                    if (r + c) % 2 == 0:
+                        color = light_color
+                    else:
+                        color = dark_color
+                        
+                    pygame.draw.rect(screen, color, (x, y, square_size, square_size))
+
+        # Draw pieces, hints, and highlights on top
         for r in range(8):
             for c in range(8):
                 x = board_x + c * square_size
                 y = board_y + r * square_size
-                
-                if (r + c) % 2 == 0:
-                    color = light_color
-                else:
-                    color = dark_color
-                    
-                pygame.draw.rect(screen, color, (x, y, square_size, square_size))
                 
                 # Draw hint (if needed)
                 if puzzle_data['show_hint'] == True:
@@ -254,7 +303,21 @@ def boardDisplayPuzzle(theme_name="gold"):
                 p = current_game.board.getPiece((r, c))
                 if isinstance(p, Empty) == False:
                     # Find Image
-                    path = os.path.join(ASSETS_DIR, p.image)
+                    image_path = None
+                    theme_specific_path = os.path.join(PIECES_DIR, theme_piece_name, p.image)
+                    default_path = os.path.join(ASSETS_DIR, p.image)
+
+                    if p.image in PIECE_MAPPING:
+                        mapped_name = PIECE_MAPPING[p.image]
+                        mapped_path = os.path.join(PIECES_DIR, theme_piece_name, mapped_name)
+                        if os.path.exists(mapped_path):
+                            image_path = mapped_path
+                        else:
+                            image_path = default_path
+                    else:
+                         image_path = default_path
+                         
+                    path = image_path
                     try:
                         img = pygame.image.load(path)
                         # Center it
@@ -279,8 +342,21 @@ def boardDisplayPuzzle(theme_name="gold"):
             pygame.draw.circle(screen, (0, 255, 0), (cx, cy), 15)
 
         # Draw buttons and text
+        # Draw message box
+        msg_rect = pygame.Rect(1400, 250, 350, 100)
+        pygame.draw.rect(screen, (50, 50, 50), msg_rect) # Background
+        pygame.draw.rect(screen, (200, 200, 200), msg_rect, 3) # Border
+        
         text_surf = font_msg.render(puzzle_data['message'], True, (255, 255, 255))
-        screen.blit(text_surf, (1400, 250))
+        # Handle scaling if text is too long (basic handling)
+        if text_surf.get_width() > 330:
+            scale_factor = 330 / text_surf.get_width()
+            new_width = int(text_surf.get_width() * scale_factor)
+            new_height = int(text_surf.get_height() * scale_factor)
+            text_surf = pygame.transform.smoothscale(text_surf, (new_width, new_height))
+            
+        text_rect = text_surf.get_rect(center=msg_rect.center)
+        screen.blit(text_surf, text_rect)
         
         btn_back.process()
         btn_back.draw(screen)

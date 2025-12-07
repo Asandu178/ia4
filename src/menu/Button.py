@@ -23,6 +23,33 @@ class Button():
         self.buttonSurface = pygame.Surface((self.width, self.height))
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.font = pygame.font.Font(None, 40) 
+        
+        # Text - Auto-scale font size to fit in diamond width
+        usable_width = self.width * 0.7 
+        
+        font_size = 40
+        self.textSurf = self.font.render(self.buttonText, True, (255, 255, 255))
+        
+        while self.textSurf.get_width() > usable_width and font_size > 20:
+            font_size -= 2
+            self.font = pygame.font.Font(None, font_size)
+            self.textSurf = self.font.render(self.buttonText, True, (255, 255, 255))
+            
+        self.textRect = self.textSurf.get_rect(center=self.rect.center) 
+
+    def set_text(self, text):
+        self.buttonText = text
+        usable_width = self.width * 0.7 
+        font_size = 40
+        self.font = pygame.font.Font(None, font_size)
+        self.textSurf = self.font.render(self.buttonText, True, (255, 255, 255))
+        
+        while self.textSurf.get_width() > usable_width and font_size > 20:
+            font_size -= 2
+            self.font = pygame.font.Font(None, font_size)
+            self.textSurf = self.font.render(self.buttonText, True, (255, 255, 255))
+            
+        self.textRect = self.textSurf.get_rect(center=self.rect.center) 
 
     def process(self):
         mousePos = pygame.mouse.get_pos()
@@ -79,6 +106,4 @@ class Button():
         pygame.draw.line(screen, self.fillColors['border_dark'], points[2], points[3], 3)
 
         # Text
-        textSurf = self.font.render(self.buttonText, True, (255, 255, 255))
-        textRect = textSurf.get_rect(center=self.rect.center)
-        screen.blit(textSurf, textRect)
+        screen.blit(self.textSurf, self.textRect)

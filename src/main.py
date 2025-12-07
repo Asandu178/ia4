@@ -3,7 +3,7 @@ from board import *
 from board.boardLogic import *
 from gui.board_gui_pvp import boardDisplay as boardDisplayPvP
 from gui.board_gui_pvb import boardDisplayPvB
-from gui.board_gui import boardDisplay
+# from gui.board_gui import boardDisplay
 from game import chessGame
 from game import human
 from game import bot
