@@ -7,12 +7,14 @@ from gui.board_gui_pvb import boardDisplayPvB
 from game import chessGame
 from game import human
 from game import bot
+from game import engine
 from network.network import Network
 import server
 import threading
 from menu.central_menu import main_menu
 
 def main():
+    engine.Engine.buildEngine()
     main_menu()
 
 if __name__ == "__main__":
