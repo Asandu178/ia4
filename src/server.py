@@ -5,6 +5,7 @@ import pickle
 class Server:
     def __init__(self, host='0.0.0.0', port=5555, time_limit=None):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.host = host
         self.port = port
         self.server.bind((self.host, self.port))
@@ -51,18 +52,44 @@ class Server:
 
     def run(self):
         current_player = 0
-        while True:
-            conn, addr = self.server.accept()
-            print("Connected to:", addr)
-            self.clients.append(conn)
+        self.running = True
+        self.server.settimeout(1.0) 
+        while self.running:
+            try:
+                # Set timeout so we can check self.running periodically
+                conn, addr = self.server.accept()
+                print("Connected to:", addr)
+                self.clients.append(conn)
 
-            # Assign player 0 (White) or 1 (Black)
-            # Simple logic: first to connect is White
-            player_id = current_player
-            current_player = (current_player + 1) % 2
+                # Assign player 0 (White) or 1 (Black)
+                # Simple logic: first to connect is White
+                player_id = current_player
+                current_player = (current_player + 1) % 2
 
-            thread = threading.Thread(target=self.handle_client, args=(conn, player_id))
-            thread.start()
+                thread = threading.Thread(target=self.handle_client, args=(conn, player_id))
+                thread.start()
+            except socket.timeout:
+                continue
+            except OSError:
+                # Socket closed
+                break
+            except Exception as e:
+                print(f"Server error: {e}")
+                break
+
+    def stop(self):
+        self.running = False
+        try:
+            self.server.close()
+        except:
+            pass
+        # Close all client connections
+        for client in self.clients:
+            try:
+                client.close()
+            except:
+                pass
+        self.clients = []
 
 if __name__ == "__main__":
     server = Server()
