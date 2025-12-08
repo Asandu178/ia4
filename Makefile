@@ -1,5 +1,5 @@
 
-PYTHON = python
+PYTHON = python3
 SRC_DIR = src
 MAIN_SCRIPT = $(SRC_DIR)/main.py
 
