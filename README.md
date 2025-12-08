@@ -79,12 +79,9 @@ pip install -r requirements.txt
 
 
 ### 2. Running the Game
-You can run the game using Python directly or use the provided `Makefile`.
-
-
-**Using Makefile (Linux/WSL):**
+You can run the game using the following command:
 bash
-make run
+python3 src/main.py
 
 This will open the **Main Menu**, where you can navigate to all game modes and settings.
 
