@@ -5,7 +5,7 @@ import random
 import os
 import sys
 
-# Add parent folder to path
+# Add parent folder to path to allow importing modules from 'src'
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from themes import get_theme
@@ -27,6 +27,7 @@ BOARDS_DIR = os.path.join(ASSETS_DIR, 'boards')
 PIECES_DIR = os.path.join(ASSETS_DIR, 'pieces')
 PUZZLES_FILE = os.path.join(ASSETS_DIR, 'puzzles.txt')
 
+# Mapping for standard piece names to filenames
 PIECE_MAPPING = {
     'white-pawn.png': 'wp.png',
     'white-rook.png': 'wr.png',
@@ -42,7 +43,7 @@ PIECE_MAPPING = {
     'black-king.png': 'bk.png'
 }
 
-# Load a random fen string from the puzzles file
+# Load a random FEN string from the puzzles file to set up a new puzzle
 def load_random_fen():
     try:
         f = open(PUZZLES_FILE, 'r')
@@ -61,6 +62,7 @@ def load_random_fen():
     except:
         return startingFen
 
+# Calculate the best move for the bot in a separate thread
 def get_best_move(bot, fen, result_queue):
     try:
         move = bot.decideMove([], fen)
@@ -68,6 +70,7 @@ def get_best_move(bot, fen, result_queue):
     except:
         result_queue.put(None)
 
+# Initialize a new game state from a FEN string
 def setup_game(fen_string):
     parts = fen_string.split(' ')
     if len(parts) > 1 and parts[1] == 'w':
@@ -79,18 +82,20 @@ def setup_game(fen_string):
     game.board.updateBoard()
     return game, turn
 
-# Main function for displaying the puzzle board
+# Main function to display and run the puzzle mode
 def boardDisplayPuzzle(theme_name="gold"):
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     pygame.display.set_caption("Chess Puzzle Mode")
     clock = pygame.time.Clock()
     
+    # Board definitions
     square_size = 120
     board_side = 8
     board_width = board_side * square_size
     board_height = board_side * square_size
     
+    # Center the board on the screen
     board_x = 300
     board_y = (1080 - board_height) // 2
     
@@ -110,6 +115,7 @@ def boardDisplayPuzzle(theme_name="gold"):
              except:
                  pass 
     
+    # Set up colors if no image is used
     if not board_image:
         theme = get_theme("classic") 
         theme_data = get_theme(theme_board_name.replace(".png","").lower()) 
@@ -149,7 +155,7 @@ def boardDisplayPuzzle(theme_name="gold"):
     
     start_calculation()
 
-    # Functions for the buttons
+    # Button callback functions
     def click_next():
         puzzle_data['fen'] = load_random_fen()
         g, t = setup_game(puzzle_data['fen'])
@@ -334,7 +340,7 @@ def boardDisplayPuzzle(theme_name="gold"):
                         else:
                             pygame.draw.circle(screen, (50, 50, 50), (center_x, center_y), 35)
 
-        # Draw green circles for moves
+        # Draw green circles for possible moves
         for move in current_game.possibleMoves:
             r = move[0]
             c = move[1]

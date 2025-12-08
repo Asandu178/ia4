@@ -2,7 +2,7 @@ import pygame
 import sys
 import os
 
-# Ensure src is in path
+# Ensure src is in path to allow imports from other modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from menu.Button import Button
@@ -17,7 +17,7 @@ def pvb_menu():
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Player vs Bot - Select Difficulty")
     
-    # Generate background
+    # Generate background using the common background utility
     wall_surface = create_background(screen_width, screen_height)
     
     # Fonts
@@ -26,22 +26,26 @@ def pvb_menu():
     
     running = True
 
-    # Callbacks
+    # Callbacks for difficulty selection
     def start_easy():
+        # Depth 1: Very easy, makes mistakes
         boardDisplayPvB(bot_depth=1)
         # return to menu after game
         reset_display()
 
     def start_medium():
+        # Depth 5: Intermediate challenge
         boardDisplayPvB(bot_depth=5)
         reset_display()
 
     def start_hard():
+        # Depth 10: Strong bot
         boardDisplayPvB(bot_depth=10)
         reset_display()
 
     def start_demon():
-        boardDisplayPvB(bot_depth=20)
+        # Depth 30: Very strong, near grandmaster level
+        boardDisplayPvB(bot_depth=30)
         reset_display()
 
     def back_to_main():
@@ -49,12 +53,12 @@ def pvb_menu():
         running = False
         
     def reset_display():
-        # Reset display after returning from game
+        # Reset display after returning from game to ensure menu sizing is correct
         nonlocal screen
         screen = pygame.display.set_mode((800, 600))
         pygame.display.set_caption("Player vs Bot - Select Difficulty")
 
-    # Buttons
+    # Button layout configuration
     btn_width = 350
     btn_height = 80
     
@@ -74,7 +78,7 @@ def pvb_menu():
     buttons = [btn_easy, btn_medium, btn_hard, btn_demon, btn_back]
 
     # Prevent immediate click through from previous menu
-    # Wait until mouse is released
+    # Wait until mouse is released before accepting input
     while pygame.mouse.get_pressed()[0]:
         for event in pygame.event.get():
              if event.type == pygame.QUIT:
@@ -85,24 +89,24 @@ def pvb_menu():
     while running:
         screen.blit(wall_surface, (0, 0))
         
-        # Title
+        # Draw Title
         title_surf = font_title.render("Select Bot Difficulty", True, (255, 255, 255))
         title_rect = title_surf.get_rect(center=(screen_width // 2, 50))
         screen.blit(title_surf, title_rect)
         
-        # Events
+        # Event Handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
                 
-        # Draw Buttons
+        # Draw and process Buttons
         for btn in buttons:
             btn.process()
             btn.draw(screen)
             
         pygame.display.flip()
 
-    # Wait for mouse release to prevent double clicking through menus
+    # Wait for mouse release to prevent double clicking through menus when returning
     while pygame.mouse.get_pressed()[0]:
         for event in pygame.event.get():
              if event.type == pygame.QUIT:

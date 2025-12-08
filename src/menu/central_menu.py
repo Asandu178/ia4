@@ -13,28 +13,35 @@ from gui.board_gui_puzzle import boardDisplayPuzzle
 
 from menu.preferences import preferences_menu
 
+# Call player vs player menu
 def start_pvp():
     pvp_menu()
 
+# Call player vs bot menu and reset display on return
 def start_pvb():
     pvb_menu()
+    # Reset display mode to menu size when returning
     pygame.display.set_mode((800, 600))
     pygame.display.set_caption("Chess Game - Main Menu")
 
+# Start puzzle mode
 def start_puzzle():
     boardDisplayPuzzle()
     pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Chess Game - Main Menu")
+    pygame.display.set_caption("Chess Game - Puzzle")
 
+# Open preferences menu
 def start_preferences():
     preferences_menu()
     pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Chess Game - Main Menu")
+    pygame.display.set_caption("Chess Game - Preferences")
 
+# Exit the application
 def quit_game():
     pygame.quit()
     sys.exit()
 
+# Main menu loop
 def main_menu():
     pygame.init()
     screen_width = 800
@@ -45,13 +52,14 @@ def main_menu():
     # Generate background using the shared utility
     wall_surface = create_background(screen_width, screen_height)
 
-    # Button dimensions and spacing
+    # Button dimensions and spacing configuration
     btn_width = 350
     btn_height = 80 
     btn_x = (screen_width - btn_width) // 2
     start_y = 100
     gap = 90
 
+    # Define menu buttons with their callback functions
     buttons = [
         Button(btn_x, start_y, btn_width, btn_height, 'Player vs Player', start_pvp),
         Button(btn_x, start_y + gap, btn_width, btn_height, 'Player vs Bot', start_pvb),
@@ -70,6 +78,7 @@ def main_menu():
         # Draw pre-generated wall background
         screen.blit(wall_surface, (0, 0))
 
+        # Update and draw buttons
         for btn in buttons:
             btn.process()
             btn.draw(screen)

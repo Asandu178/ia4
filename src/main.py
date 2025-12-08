@@ -1,4 +1,3 @@
-# used for testing as of now
 from board import *
 from board.boardLogic import *
 from gui.board_gui_pvp import boardDisplay as boardDisplayPvP

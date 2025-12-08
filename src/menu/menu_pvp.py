@@ -3,7 +3,7 @@ import os
 import pygame
 import threading
 
-# Add parent directory to path to handle imports if run directly (though usually run from main)
+# Add parent directory to path to handle imports from 'src'
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from menu.Button import Button
@@ -11,26 +11,30 @@ from menu.background import create_background
 from gui.board_gui_pvp import boardDisplay as boardDisplayPvP
 from network.network import Network
 import server
+from menu.TextInput import TextInputBox
 
 from menu.menu_time import time_selection_menu
 
 def start_local_game():
+    # Prompt the user for time limit selection
     time_limit = time_selection_menu()
     if time_limit == "BACK":
         return
         
+    # Start the local game with the selected time limit
     boardDisplayPvP(time_limit=time_limit)
-    # Reset display mode after game ends
+    # Reset display mode after game ends to ensure the menu looks correct
     pygame.display.set_mode((800, 600))
     pygame.display.set_caption("Chess Game - PvP Menu")
 
 def start_host_game():
+    # Allow the host to select the time controls
     time_limit = time_selection_menu()
     if time_limit == "BACK":
         return
 
     print("Starting server...")
-    # Start server in a separate thread
+    # Initialize and start the server in a separate thread so it doesn't block the UI
     try:
         s = server.Server(time_limit=time_limit)
     except OSError as e:
@@ -41,10 +45,10 @@ def start_host_game():
     t.daemon = True
     t.start()
     
-    # Host connects as the first client
+    # The Host also acts as a client, so connect to the local server
     network = Network()
     
-    # Setup loading screen
+    # Setup the hosting lobby screen
     pygame.init()
     screen_width = 800
     screen_height = 600
@@ -60,13 +64,13 @@ def start_host_game():
     player_connected = False
     
     
-    # Back button
+    # Back button to cancel hosting
     btn_back = Button(20, 20, 150, 50, 'Back', back_to_main)
 
     while waiting:
         events = pygame.event.get()
-        # Check if we have 2 clients (Host + Opponent)
-        # s.clients is updated in the server thread
+        # Check if we have 2 clients connected (Host + Opponent)
+        # s.clients is updated safely in the server thread
         if len(s.clients) >= 2:
             player_connected = True
             waiting = False
@@ -78,7 +82,7 @@ def start_host_game():
                 pygame.quit()
                 sys.exit()
         
-        # Process Back button
+        # Process Back button click
         action = btn_back.process()
         if action == "BACK":
             s.stop()
@@ -86,10 +90,9 @@ def start_host_game():
             t.join(timeout=1.0) 
             return
 
-        # Draw
+        # Draw background and text
         screen.blit(wall_surface, (0, 0))
         
-        # Draw status text
         if not player_connected:
             text_str = f"Waiting for opponent... ({len(s.clients)}/2)"
         else:
@@ -98,7 +101,7 @@ def start_host_game():
         text_surf = font.render(text_str, True, (255, 255, 255))
         text_rect = text_surf.get_rect(center=(screen_width // 2, screen_height // 2))
         
-        # Add a loading animation
+        # Add a drop shadow for better readability
         shadow_surf = font.render(text_str, True, (0, 0, 0))
         shadow_rect = shadow_surf.get_rect(center=(screen_width // 2 + 2, screen_height // 2 + 2))
         
@@ -108,9 +111,9 @@ def start_host_game():
         btn_back.draw(screen)
         
         pygame.display.flip()
-        pygame.time.wait(100) # Small delay to reduce CPU usage
+        pygame.time.wait(180) # Small delay to reduce CPU usage while waiting
 
-    # Proceed to game
+    # Proceed to game as White (Host)
     player_color = 'white'
     boardDisplayPvP(network=network, player_color=player_color, time_limit=time_limit)
     
@@ -118,9 +121,14 @@ def start_host_game():
     pygame.display.set_mode((800, 600))
     pygame.display.set_caption("Chess Game - PvP Menu")
 
-from menu.TextInput import TextInputBox
+
 
 def start_join_game():
+      
+    time_limit = time_selection_menu()
+    if time_limit == "BACK":
+        return
+
     pygame.init()
     screen_width = 800
     screen_height = 600
@@ -130,7 +138,7 @@ def start_join_game():
     # Generate background
     wall_surface = create_background(screen_width, screen_height)
     
-    # Create Text Input Box
+    # Create Text Input Box for IP Address
     input_box_width = 400
     input_box_height = 60
     input_box_x = (screen_width - input_box_width) // 2
@@ -148,6 +156,7 @@ def start_join_game():
     ip = None
     running = True
     
+    # Input loop
     while running:
         events = pygame.event.get()
         for event in events:
@@ -168,7 +177,7 @@ def start_join_game():
                 ip = 'localhost'
             running = False
 
-        # Draw
+        # Draw UI
         screen.blit(wall_surface, (0, 0))
         
         screen.blit(instruction_text, instruction_rect)
@@ -182,18 +191,19 @@ def start_join_game():
         print(f"Connecting to {ip}...")
         try:
             network = None
-            # Draw the "Connecting..." screen
+            # Draw the "Connecting..." screen to give user feedback
             screen.blit(wall_surface, (0, 0))
             connect_text = font_instr.render(f"Connecting to {ip}...", True, (255, 255, 255))
             connect_rect = connect_text.get_rect(center=(screen_width // 2, screen_height // 2))
             screen.blit(connect_text, connect_rect)
             pygame.display.flip()
             
-            # Attempt connection
+            # Attempt to establish network connection
             network = Network(ip)
             
             player_color = 'black'
-            boardDisplayPvP(network=network, player_color=player_color, time_limit=300)
+            # Start game using the time limit received from the server (via network object)
+            boardDisplayPvP(network=network, player_color=player_color, time_limit=network.time_limit)
         except Exception as e:
             print(f"Connection failed: {e}")
     

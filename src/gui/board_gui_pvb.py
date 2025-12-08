@@ -15,7 +15,7 @@ from pieces.queen import Queen
 from pieces.rook import Rook
 from pieces.bishop import Bishop
 from pieces.knight import Knight
-from .dialogs import show_promotion_dialog
+from .dialogs import show_promotion_dialog, draw_game_over
 from settings import SettingsManager
 import os
 
@@ -33,7 +33,6 @@ PIECE_MAPPING = {
     'black-queen.png': 'bq.png',
     'black-king.png': 'bk.png'
 }
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS_DIR = os.path.join(BASE_DIR, 'assets') 
 BOARDS_DIR = os.path.join(ASSETS_DIR, 'boards')
@@ -55,17 +54,16 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
     running = True
     dt = 0
     
-    # Parametri tabla
+    # Board parameters
     Board_side = 8
     square_size = 120
     board_width = Board_side * square_size
     board_height = Board_side * square_size
 
-    # Pozitia tablei pe ecran (centrata)
+    # Position the board on the screen (centered)
     board_x = (1920 - board_width) // 2
     board_y = (1080 - board_height) // 2
     
-    # Importez tema aleasa
     # Import themes from SettingsManager
     theme_board_name = SettingsManager.get_theme_board()
     theme_piece_name = SettingsManager.get_theme_pieces()
@@ -81,8 +79,9 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
              except:
                  pass
     
+    # Set default colors if board image is not available
     if not board_image:
-        theme = get_theme("classic") # Default fallback
+        theme = get_theme("classic") 
         theme_data = get_theme(theme_board_name.replace(".png","").lower()) 
         
         white = theme_data.get("light_square", (240, 217, 181))
@@ -92,9 +91,8 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
         background = (30, 30, 30)
 
     
-    # Variabile pentru ture
-    # current_turn is now dynamic based on Game.currentPlayer
-    font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
+    # Turn variables
+    font_small = pygame.font.Font(None, 60)  # Smaller font for turn text
     if not player1:
         player1 = Human('white', 'Marius', 600)
     if not player2:
@@ -115,8 +113,8 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
             if event.type == pygame.QUIT:
                 running = False
             if Game.winner != None or Game.gameOver:
-                # TODO : handle gameover screen using
-                print(f'{(f'Winner is {Game.winner.upper()}' if GameStatus.STALEMATE != Game.status else 'Stalemate')} after {Game.moveCnt} moves by {Game.status.name}')
+                # Log game result
+                print(f'{(f"Winner is {Game.winner.upper()}" if GameStatus.STALEMATE != Game.status else "Stalemate")} after {Game.moveCnt} moves by {Game.status.name}')
                 
             if not Game.gameOver:
                 # Handle Human Input
@@ -136,10 +134,8 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
                         promoted_piece_name = show_promotion_dialog(screen, color)
                         Game.handleClick(pos, promoted_piece_name)
 
-                    # maybe use this ?
+                    # Update game state
                     gameState(Game.board, Game.currentPlayer)
-
-                    # TODO : handle states using _updateGameState perhaps
 
         # Bot Move Logic (Threaded)
         if not Game.gameOver and isinstance(Game.currentPlayer, Bot):
@@ -156,8 +152,6 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
                 start_pos, end_pos, promotion_type = move
                 
                 # Apply the move
-                # We use applyExternalMove because it handles selection and move logic cleanly
-                # even though it's technically "internal" to the bot logic here
                 Game.applyExternalMove(start_pos, end_pos, promotion_type)
                 
                 gameState(Game.board, Game.currentPlayer)
@@ -166,31 +160,29 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
             except queue.Empty:
                 pass # Still thinking
 
-        # Umplu ecranul cu culoarea din temă
+        # Fill screen with background
         screen.fill(background)
         
-        # Desenez tabla de șah
-        # Desenez tabla de șah
+        # Draw Chess Board
         if board_image:
              screen.blit(board_image, (board_x, board_y))
         else:
             for row in range(Board_side):
                 for col in range(Board_side):
-                    # Calcul pozitie
+                    # Calculate position
                     x = board_x + col * square_size
                     y = board_y + row * square_size
                     
-                    # Aleg culoare (alb daca suma e para, negru daca e impara)
+                    # Choose color (white if sum is even, black if odd)
                     if (row + col) % 2 == 0:
                         color = white
                     else:
                         color = black
                     
-                    # Desenez patratul
+                    # Draw the square
                     pygame.draw.rect(screen, color, (x, y, square_size, square_size))
         
-   
-
+    
         for row in range(Board_side):
             for col in range(Board_side):
                 piece = Game.board.getPiece((row, col))
@@ -235,19 +227,19 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
                         pygame.draw.circle(screen, piece_color, (center_x, center_y), 35)
                    
         
-        # Desenez highlight pe piesa selectata
+        # Highlight selected piece
         if Game.selectedPiecePos:
             row, col = Game.selectedPiecePos
             x = board_x + col * square_size
             y = board_y + row * square_size
             pygame.draw.rect(screen, (255, 155, 115), (x, y, square_size, square_size), 5)
         
-        # Desenez mutarile posibile
+        # Draw possible moves
         for move in Game.possibleMoves:
             row, col = move
             x = board_x + col * square_size + square_size // 2
             y = board_y + row * square_size + square_size // 2
-            # Cercul verde pentru mutare
+            # Green circle for possible move
             pygame.draw.circle(screen, (0, 255, 0), (x, y), 15)
         
         # Highlight last move
@@ -280,13 +272,19 @@ def boardDisplayPvB(player1=None, player2=None, theme_name="gold", fen=startingF
                 # Optional: Add border
                 pygame.draw.rect(screen, ((50, 255, 50, 64)), (x, y, square_size, square_size), 3)
                 
-        # Afiseaza tura curenta
+        # Display current turn
         turn_text = f"Turn: {Game.currentPlayer.colour.capitalize()}"
         turn_surface = font_small.render(turn_text, True, (255, 255, 255))
         screen.blit(turn_surface, (50, 50))
             
-        # Updatam display
-        pygame.display.flip()
-        
+        # Update display and handle game over
+        if Game.gameOver:
+            msg = "Game Over"
+            if Game.winner:
+                 msg = f"Game Over, {Game.winner.capitalize()} wins!"
+            elif Game.status == GameStatus.STALEMATE:
+                 msg = "Game Over, Stalemate!"
+            
+            draw_game_over(screen, msg)
 
-    
+        pygame.display.flip()

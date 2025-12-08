@@ -13,6 +13,7 @@ class Button():
         self.image = None
         
         # Colors for Stone/Diamond theme (Grey Nuances)
+        # Defines the visual style of the button
         self.fillColors = {
             'normal': '#707070',     
             'hover': '#909090',      
@@ -24,12 +25,14 @@ class Button():
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.font = pygame.font.Font(None, 40) 
         
-        # Text - Auto-scale font size to fit in diamond width
+        # Auto-scale font size to fit in diamond width
+        # Ensures text fits within the button boundaries
         usable_width = self.width * 0.7 
         
         font_size = 40
         self.textSurf = self.font.render(self.buttonText, True, (255, 255, 255))
         
+        # Loop to reduce font size until text fits
         while self.textSurf.get_width() > usable_width and font_size > 20:
             font_size -= 2
             self.font = pygame.font.Font(None, font_size)
@@ -37,6 +40,7 @@ class Button():
             
         self.textRect = self.textSurf.get_rect(center=self.rect.center) 
 
+    # Updates the button text and re-calculates font size
     def set_text(self, text):
         self.buttonText = text
         usable_width = self.width * 0.7 
@@ -44,6 +48,7 @@ class Button():
         self.font = pygame.font.Font(None, font_size)
         self.textSurf = self.font.render(self.buttonText, True, (255, 255, 255))
         
+        # Adjust font size iteratively
         while self.textSurf.get_width() > usable_width and font_size > 20:
             font_size -= 2
             self.font = pygame.font.Font(None, font_size)
@@ -51,9 +56,12 @@ class Button():
             
         self.textRect = self.textSurf.get_rect(center=self.rect.center) 
 
+    # Handle button input events
     def process(self):
         mousePos = pygame.mouse.get_pos()
+        # Check if mouse is hovering over the button
         if self.rect.collidepoint(mousePos):
+            # Check if left mouse button is pressed
             if pygame.mouse.get_pressed()[0]:
                 if self.onePress:
                     return self.onclickFunction()
@@ -63,6 +71,7 @@ class Button():
             else:
                 self.alreadyPressed = False
 
+    # Render the button to the screen
     def draw(self, screen):
         mousePos = pygame.mouse.get_pos()
         
@@ -70,6 +79,7 @@ class Button():
         is_hovered = self.rect.collidepoint(mousePos)
         is_pressed = pygame.mouse.get_pressed()[0] and is_hovered
 
+        # Determine button color based on state (pressed, hovered, normal)
         if is_pressed:
             current_color = self.fillColors['pressed']
             if self.onclickFunction and not self.alreadyPressed:
@@ -81,7 +91,7 @@ class Button():
         else:
             self.alreadyPressed = False
 
-        # Diamond Points
+        # Define vertices for the Diamond shape
         # Top, Right, Bottom, Left
         points = [
             (self.x + self.width // 2, self.y),
@@ -93,8 +103,7 @@ class Button():
         # Draw Main Diamond Body
         pygame.draw.polygon(screen, current_color, points)
         
-        
-        
+        # Draw 3D-effect borders to make the button look raised
         # Upper Left Edge
         pygame.draw.line(screen, self.fillColors['border_light'], points[3], points[0], 3)
         # Upper Right Edge
@@ -105,5 +114,5 @@ class Button():
         # Bottom Left Edge
         pygame.draw.line(screen, self.fillColors['border_dark'], points[2], points[3], 3)
 
-        # Text
+        # Draw the button text centered
         screen.blit(self.textSurf, self.textRect)

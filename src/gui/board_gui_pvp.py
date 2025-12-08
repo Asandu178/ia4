@@ -13,7 +13,7 @@ from pieces.queen import Queen
 from pieces.rook import Rook
 from pieces.bishop import Bishop
 from pieces.knight import Knight
-from .dialogs import show_promotion_dialog
+from .dialogs import show_promotion_dialog, draw_game_over
 from settings import SettingsManager
 import os
 
@@ -33,25 +33,24 @@ PIECE_MAPPING = {
     'black-king.png': 'bk.png'
 }
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS_DIR = os.path.join(BASE_DIR, 'assets')
 BOARDS_DIR = os.path.join(ASSETS_DIR, 'boards')
 PIECES_DIR = os.path.join(ASSETS_DIR, 'pieces')
 
-# pygame setup
+# Main function for displaying the PvP board
 def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen, turn='white', network=None, player_color=None, time_limit=None):
     pygame.init()
     screen = pygame.display.set_mode((1920, 1080))
     running = True
     dt = 0
     
-    # Parametri tabla
+    # Board parameters
     Board_side = 8
     square_size = 120
     board_width = Board_side * square_size
     board_height = Board_side * square_size
 
-    # Pozitia tablei pe ecran (centrata)
+    # Position the board on the screen (centered)
     board_x = (1920 - board_width) // 2
     board_y = (1080 - board_height) // 2
     
@@ -70,6 +69,7 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
              except:
                  pass
     
+    # Set default colors if board image is not available
     if not board_image:
         theme = get_theme("classic") 
         
@@ -82,19 +82,25 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
         background = (30, 30, 30)
 
     
-    # Variabile pentru ture
-    font_small = pygame.font.Font(None, 60)  # Font mai mic pentru litere în cercuri
-    font_timer = pygame.font.Font(None, 80) # Font perntru timer
+    # Fonts
+    font_small = pygame.font.Font(None, 60)  # Font for turn text
+    font_timer = pygame.font.Font(None, 80) # Font for timers
 
     if not player1:
         player1 = Human('white', 'Marius', 600)
         # Check if time_limit is provided, otherwise default to 600 or player default
         if time_limit is not None:
-             player1.time = time_limit
+             if time_limit == -1:
+                 player1.time = None
+             else:
+                 player1.time = time_limit
     if not player2:
         player2 = Human('black', 'Andrei', 600)
         if time_limit is not None:
-             player2.time = time_limit
+             if time_limit == -1:
+                 player2.time = None
+             else:
+                 player2.time = time_limit
 
     Player1 = player1
     Player2 = player2
@@ -103,8 +109,12 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
     Player2.board = Game.board
     
     if time_limit is not None:
-        Player1.time = time_limit
-        Player2.time = time_limit
+        if time_limit == -1:
+            Player1.time = None
+            Player2.time = None
+        else:
+            Player1.time = time_limit
+            Player2.time = time_limit
         
     start_ticks = pygame.time.get_ticks()
 
@@ -112,12 +122,19 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
         current_time = pygame.time.get_ticks()
         
         
+        # Determine orientation
+        if network:
+             orientation = player_color # Fixed for network play
+        else:
+             orientation = Game.currentPlayer.colour # Dynamic for local play
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if Game.winner != None or Game.gameOver:
-                # TODO : handle gameover screen using
-                print(f'{(f'Winner is {Game.winner.upper()}' if GameStatus.STALEMATE != Game.status else 'Stalemate')} after {Game.moveCnt} moves by {Game.status.name}')
+                 # TODO : handle gameover screen using
+                print(f'{(f"Winner is {Game.winner.upper()}" if GameStatus.STALEMATE != Game.status else "Stalemate")} after {Game.moveCnt} moves by {Game.status.name}')
+
                 
             if not Game.gameOver:
                 # Update current player time check for timeout
@@ -135,8 +152,17 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
                 
                 elif event.type == pygame.MOUSEBUTTONDOWN or isinstance(Game.currentPlayer, Bot):
                     mouse_x, mouse_y = pygame.mouse.get_pos()
-                    col = (mouse_x - board_x) // square_size
-                    row = (mouse_y - board_y) // square_size
+                    
+                    # Transform mouse click to logical board coordinates
+                    clicked_col = (mouse_x - board_x) // square_size
+                    clicked_row = (mouse_y - board_y) // square_size
+                    
+                    if orientation == 'black':
+                        row = 7 - clicked_row
+                        col = 7 - clicked_col
+                    else:
+                        row = clicked_row
+                        col = clicked_col
             
                 
                     pos = (row, col)
@@ -157,43 +183,61 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
                             _, start, end = Game.board.last_move
                             network.send({"start": start, "end": end, "promotion": None})
 
-                    # maybe use this ?
+                    # Update Game state
                     gameState(Game.board, Game.currentPlayer)
 
-                    # TODO : handle states using _updateGameState perhaps
 
-        # Umplu ecranul cu culoarea din temă
+        # Fill background
         screen.fill(background)
         
-        # Desenez tabla de șah
-        # Desenez tabla de șah
+        # Draw Chess Board
         if board_image:
-             screen.blit(board_image, (board_x, board_y))
+            if orientation == 'black':
+                 rotated_board = pygame.transform.rotate(board_image, 180)
+                 screen.blit(rotated_board, (board_x, board_y))
+            else:
+                 screen.blit(board_image, (board_x, board_y))
         else:
             for row in range(Board_side):
                 for col in range(Board_side):
-                    # Calcul pozitie
-                    x = board_x + col * square_size
-                    y = board_y + row * square_size
+                    # Visual coordinates calculation
+                    if orientation == 'black':
+                        draw_row = 7 - row
+                        draw_col = 7 - col
+                    else:
+                         draw_row = row
+                         draw_col = col
                     
-                    # Aleg culoare (alb daca suma e para, negru daca e impara)
+                    # Calculate position
+                    x = board_x + draw_col * square_size
+                    y = board_y + draw_row * square_size
+                    
+                    # Choose color (white if sum is even, black if odd)
                     if (row + col) % 2 == 0:
                         color = white
                     else:
                         color = black
                     
-                    # Desenez patratul
+                    # Draw the square
                     pygame.draw.rect(screen, color, (x, y, square_size, square_size))
         
-
-
+        # Draw Pieces
         for row in range(Board_side):
             for col in range(Board_side):
                 piece = Game.board.getPiece((row, col))
                 if not isinstance(piece, Empty):
+                    
+                    # Calculate visual position
+                    if orientation == 'black':
+                         draw_row = 7 - row
+                         draw_col = 7 - col
+                    else:
+                         draw_row = row
+                         draw_col = col
+                    
                     # Calculate top-left corner of square
-                    x = board_x + col * square_size
-                    y = board_y + row * square_size
+                    x = board_x + draw_col * square_size
+                    y = board_y + draw_row * square_size
                     
                     # Get the PNG image for this piece
                     image_path = None
@@ -232,19 +276,35 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
                         pygame.draw.circle(screen, piece_color, (center_x, center_y), 35)
                    
         
-        # Desenez highlight pe piesa selectata
+        # Draw highlight on selected piece
         if Game.selectedPiecePos:
             row, col = Game.selectedPiecePos
-            x = board_x + col * square_size
-            y = board_y + row * square_size
+            
+            if orientation == 'black':
+                 draw_row = 7 - row
+                 draw_col = 7 - col
+            else:
+                 draw_row = row
+                 draw_col = col
+
+            x = board_x + draw_col * square_size
+            y = board_y + draw_row * square_size
             pygame.draw.rect(screen, (255, 155, 115), (x, y, square_size, square_size), 5)
         
-        # Desenez mutarile posibile
+        # Draw possible moves
         for move in Game.possibleMoves:
             row, col = move
-            x = board_x + col * square_size + square_size // 2
-            y = board_y + row * square_size + square_size // 2
-            # Cercul verde pentru mutare
+            
+            if orientation == 'black':
+                 draw_row = 7 - row
+                 draw_col = 7 - col
+            else:
+                 draw_row = row
+                 draw_col = col
+                 
+            x = board_x + draw_col * square_size + square_size // 2
+            y = board_y + draw_row * square_size + square_size // 2
+            # Green circle for possible move
             pygame.draw.circle(screen, (0, 255, 0), (x, y), 15)
         
         # Highlight last move
@@ -255,8 +315,16 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
             # Highlight FROM square (where piece came from)
             if from_pos:
                 row, col = from_pos
-                x = board_x + col * square_size
-                y = board_y + row * square_size
+                
+                if orientation == 'black':
+                     draw_row = 7 - row
+                     draw_col = 7 - col
+                else:
+                     draw_row = row
+                     draw_col = col
+
+                x = board_x + draw_col * square_size
+                y = board_y + draw_row * square_size
                 # Draw semi-transparent overlay
                 highlight_surf = pygame.Surface((square_size, square_size), pygame.SRCALPHA)
                 highlight_surf.fill((50, 255, 50, 64))
@@ -268,22 +336,29 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
             if moved_piece and hasattr(moved_piece, 'position'):
                 to_pos = moved_piece.position
                 row, col = to_pos
-                x = board_x + col * square_size
-                y = board_y + row * square_size
+                
+                if orientation == 'black':
+                     draw_row = 7 - row
+                     draw_col = 7 - col
+                else:
+                     draw_row = row
+                     draw_col = col
+
+                x = board_x + draw_col * square_size
+                y = board_y + draw_row * square_size
                 # Draw semi-transparent overlay
                 highlight_surf = pygame.Surface((square_size, square_size), pygame.SRCALPHA)
                 highlight_surf.fill((50, 255, 50, 64))
                 screen.blit(highlight_surf, (x, y))
-                # Optional: Add border
                 pygame.draw.rect(screen, ((50, 255, 50, 64)), (x, y, square_size, square_size), 3)
                 
-        # Afiseaza tura curenta
+        # Display current turn
         turn_text = f"Turn: {Game.currentPlayer.colour.capitalize()}"
         turn_surface = font_small.render(turn_text, True, (255, 255, 255))
         screen.blit(turn_surface, (50, 50))
         
         # Display Timers
-        if time_limit is not None:
+        if time_limit is not None and time_limit != -1:
              def format_time(seconds):
                  mins = int(seconds) // 60
                  secs = int(seconds) % 60
@@ -305,15 +380,21 @@ def boardDisplay(player1=None, player2=None, theme_name="gold", fen=startingFen,
              p1_timer_surf = font_timer.render(format_time(p1_time), True, (255, 255, 255) if Game.currentPlayer == Player1 else (150, 150, 150))
              p2_timer_surf = font_timer.render(format_time(p2_time), True, (255, 255, 255) if Game.currentPlayer == Player2 else (150, 150, 150))
              
-             # Position timers (e.g., left side)
+             # Position timers
              screen.blit(p1_timer_surf, (50, 150)) # Player 1 (White)
              screen.blit(p2_timer_surf, (50, 250)) # Player 2 (Black) - maybe improve positioning later
              
              pygame.draw.circle(screen, (255, 255, 255), (30, 175), 10) # White indicator
              pygame.draw.circle(screen, (0, 0, 0), (30, 275), 10) # Black indicator
             
-        # Updatam display
-        pygame.display.flip()
-        
+        # Update display and handle game over
+        if Game.gameOver:
+            msg = "Game Over"
+            if Game.winner:
+                msg = f"Game Over, {Game.winner.capitalize()} wins!"
+            elif Game.status == GameStatus.STALEMATE:
+                msg = "Game Over, Stalemate!"
+            
+            draw_game_over(screen, msg)
 
-    
+        pygame.display.flip()

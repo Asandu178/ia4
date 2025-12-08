@@ -160,6 +160,18 @@ class Board:
         if piece_type is None:
             piece_type = 'Queen'
 
+        # Mapping short codes to full names
+        type_map = {
+            'q': 'Queen',
+            'r': 'Rook',
+            'b': 'Bishop',
+            'n': 'Knight'
+        }
+        if len(piece_type) == 1:
+             piece_type = type_map.get(piece_type.lower(), 'Queen')
+        else:
+             piece_type = piece_type.capitalize()
+
         img = f'{pawn.colour}-{piece_type.lower()}.png'
         
         if piece_type == 'Queen':
