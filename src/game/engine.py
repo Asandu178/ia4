@@ -19,7 +19,7 @@ class Engine:
             p = Popen(["cd ./game/stockfish/src && make -j profile-build"], shell=True)
             time.sleep(60)
     
-    def evaluatePos(self, moves: list[str]=[], fen: str=startingFen) -> str:
+    def evaluatePos(self, moves: list[str]=[], fen: str=startingFen, threads=6) -> str:
         p = Popen([self.pathToEngine], stdout=PIPE, stdin=PIPE, stderr=PIPE, text=True)
 
         # use stockfish with uci
@@ -39,6 +39,15 @@ class Engine:
         while True:
             line = p.stdout.readline().strip()
             if line == "readyok":
+                break
+        
+        p.stdin.write(f"setoption name Threads value {threads}\n")
+        p.stdin.flush()
+
+        # wait until ready
+        while True:
+            line = p.stdout.readline().strip()
+            if line == f"info string Using {threads} threads":
                 break
 
         # introduce all moves made in uci format
