@@ -11,7 +11,7 @@ A feature-rich Chess application built with Python and Pygame, offering single-p
     *   **GUI & Menu System:** Implemented the entire graphical user interface, including menus, buttons, and visual styling.
     *   **Networking:** Developed the client-server architecture for multiplayer support effectively.
     *   **Settings:** Created the preferences and settings management system.
-*   **Asandu178**:
+*   **Scorei Dragos Alexandru**:
     *   **Game Backbone:** Implemented the core chess logic, including piece rules, board representation, and game state management.
     *   **Assets:** Handled the integration of board and piece assets.
     *   **Bot:** Implemented the Stockfish integration for AI opponent.
